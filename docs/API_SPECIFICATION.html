@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduPlatform - Complete API Specification &amp; Implementation Rules</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; color: #1e293b; line-height: 1.6; font-size: 10.5pt; background: #fff; }
+
+  .cover { page-break-after: always; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); color: #fff; padding: 60px; }
+  .cover h1 { font-size: 34pt; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+  .cover h2 { font-size: 15pt; font-weight: 400; color: #94a3b8; margin-bottom: 40px; }
+  .cover .meta { font-size: 10pt; color: #64748b; margin-top: 60px; line-height: 2; }
+  .cover .meta span { color: #10b981; font-weight: 600; }
+
+  .toc { page-break-after: always; padding: 40px 0; }
+  .toc h2 { font-size: 18pt; color: #0f172a; margin-bottom: 24px; border-bottom: 3px solid #10b981; padding-bottom: 8px; }
+  .toc-list { list-style: none; }
+  .toc-list li { padding: 5px 0; border-bottom: 1px dotted #e2e8f0; display: flex; justify-content: space-between; }
+  .toc-list li .num { color: #10b981; font-weight: 700; min-width: 30px; }
+  .toc-list li .name { flex: 1; font-weight: 500; }
+  .toc-list li .count { color: #64748b; font-size: 9pt; }
+  .toc-section { font-weight: 700; background: #f8fafc; padding: 6px 0; margin-top: 8px; border-bottom: 2px solid #e2e8f0 !important; }
+
+  .section { page-break-before: always; padding-top: 10px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+  .section-num { background: #0f172a; color: #10b981; font-weight: 800; font-size: 13pt; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .section-title { font-size: 15pt; font-weight: 700; color: #0f172a; }
+  .section-desc { font-size: 9.5pt; color: #64748b; margin-bottom: 14px; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 9pt; }
+  thead th { background: #0f172a; color: #fff; padding: 6px 8px; text-align: left; font-weight: 600; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.5px; }
+  thead th:first-child { border-radius: 5px 0 0 0; }
+  thead th:last-child { border-radius: 0 5px 0 0; }
+  tbody td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  tbody tr:hover { background: #f8fafc; }
+  tbody tr:nth-child(even) { background: #fafbfc; }
+
+  .method { font-weight: 700; font-size: 8pt; padding: 2px 6px; border-radius: 3px; display: inline-block; min-width: 38px; text-align: center; }
+  .method-get { background: #dbeafe; color: #1d4ed8; }
+  .method-post { background: #d1fae5; color: #047857; }
+  .method-put { background: #fef3c7; color: #92400e; }
+  .method-patch { background: #fce7f3; color: #9d174d; }
+  .method-delete { background: #fee2e2; color: #991b1b; }
+
+  .endpoint { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 8.5pt; color: #334155; word-break: break-all; }
+
+  .rule-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+  .rule-box h4 { font-size: 10pt; color: #92400e; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .rule-box ul { padding-left: 18px; }
+  .rule-box li { font-size: 9pt; color: #78350f; margin-bottom: 3px; }
+
+  .gap-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+  .gap-box h4 { font-size: 10pt; color: #991b1b; margin-bottom: 6px; }
+  .gap-box ul { padding-left: 18px; }
+  .gap-box li { font-size: 9pt; color: #7f1d1d; margin-bottom: 3px; }
+
+  .info-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+  .info-box h4 { font-size: 10pt; color: #166534; margin-bottom: 6px; }
+  .info-box p { font-size: 9pt; color: #15803d; }
+
+  .level-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+  .level-badge { font-size: 7.5pt; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+  .level-primary { background: #dbeafe; color: #1d4ed8; }
+  .level-secondary { background: #d1fae5; color: #047857; }
+  .level-tertiary { background: #fef3c7; color: #92400e; }
+  .level-university { background: #e0e7ff; color: #3730a3; }
+  .level-vocational { background: #ffedd5; color: #9a3412; }
+
+  .role-tag { font-size: 7.5pt; padding: 1px 6px; border-radius: 8px; font-weight: 600; display: inline-block; margin: 1px; }
+  .role-student { background: #dbeafe; color: #1d4ed8; }
+  .role-teacher { background: #d1fae5; color: #047857; }
+  .role-schooladmin { background: #fef3c7; color: #92400e; }
+  .role-superadmin { background: #fee2e2; color: #991b1b; }
+  .role-guardian { background: #e0e7ff; color: #3730a3; }
+
+  .cross-role { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+  .cross-role h4 { font-size: 10pt; color: #1d4ed8; margin-bottom: 6px; }
+
+  .footer { text-align: center; font-size: 8pt; color: #94a3b8; padding: 20px 0; border-top: 1px solid #e2e8f0; margin-top: 40px; }
+
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .section { page-break-before: always; } }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <h1>EduPlatform</h1>
+  <h2>Complete API Specification &amp; Implementation Rules</h2>
+  <p style="max-width:480px; color:#94a3b8; font-size:10.5pt;">
+    Full RESTful API reference, database schema gaps, role-based access rules,
+    cross-role workflows, and implementation constraints for the EduPlatform LMS.
+  </p>
+  <div class="meta">
+    Version <span>1.0.0</span><br>
+    Date <span>April 29, 2026</span><br>
+    Endpoints <span>75</span> &middot; API Groups <span>20</span><br>
+    Education Levels <span>Primary / Secondary / Tertiary / University / Vocational</span><br>
+    User Roles <span>Student / Teacher / School Admin / Super Admin / Guardian</span>
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ul class="toc-list">
+    <li class="toc-section"><span class="num"></span><span class="name">PART A: API SPECIFICATION</span><span class="count"></span></li>
+    <li><span class="num">1</span><span class="name">Authentication &amp; User Management</span><span class="count">7</span></li>
+    <li><span class="num">2</span><span class="name">Institution Management</span><span class="count">6</span></li>
+    <li><span class="num">3</span><span class="name">Class / Program / Batch Management</span><span class="count">7</span></li>
+    <li><span class="num">4</span><span class="name">Student Management</span><span class="count">6</span></li>
+    <li><span class="num">5</span><span class="name">Staff Management</span><span class="count">5</span></li>
+    <li><span class="num">6</span><span class="name">Subjects / Courses</span><span class="count">5</span></li>
+    <li><span class="num">7</span><span class="name">Assignments</span><span class="count">8</span></li>
+    <li><span class="num">8</span><span class="name">Study Materials</span><span class="count">6</span></li>
+    <li><span class="num">9</span><span class="name">Attendance</span><span class="count">5</span></li>
+    <li><span class="num">10</span><span class="name">Finance</span><span class="count">5</span></li>
+    <li><span class="num">11</span><span class="name">Messaging / Chat</span><span class="count">6</span></li>
+    <li><span class="num">12</span><span class="name">Whiteboard Sessions</span><span class="count">5</span></li>
+    <li><span class="num">13</span><span class="name">Communities / Study Groups</span><span class="count">6</span></li>
+    <li><span class="num">14</span><span class="name">AI Tutor</span><span class="count">4</span></li>
+    <li><span class="num">15</span><span class="name">Inclusive Learning / Accessibility</span><span class="count">5</span></li>
+    <li><span class="num">16</span><span class="name">Lifelong Learning</span><span class="count">6</span></li>
+    <li><span class="num">17</span><span class="name">Notifications</span><span class="count">5</span></li>
+    <li><span class="num">18</span><span class="name">Subscriptions</span><span class="count">4</span></li>
+    <li><span class="num">19</span><span class="name">Guardian-Linked Children &amp; Performance</span><span class="count">4</span></li>
+    <li><span class="num">20</span><span class="name">Platform Analytics</span><span class="count">4</span></li>
+    <li class="toc-section" style="margin-top:16px;"><span class="num"></span><span class="name">PART B: IMPLEMENTATION RULES</span><span class="count"></span></li>
+    <li><span class="num">R1</span><span class="name">Role-Based Access Control Matrix</span><span class="count"></span></li>
+    <li><span class="num">R2</span><span class="name">Cross-Role Workflow Rules</span><span class="count"></span></li>
+    <li><span class="num">R3</span><span class="name">Education Level Adaptation Rules</span><span class="count"></span></li>
+    <li><span class="num">R4</span><span class="name">Database Schema Gaps &amp; Required Migrations</span><span class="count"></span></li>
+    <li><span class="num">R5</span><span class="name">Data Validation &amp; Business Logic Rules</span><span class="count"></span></li>
+    <li><span class="num">R6</span><span class="name">Real-Time &amp; Performance Rules</span><span class="count"></span></li>
+    <li><span class="num">R7</span><span class="name">Security &amp; RLS Policy Rules</span><span class="count"></span></li>
+    <li><span class="num">R8</span><span class="name">File Handling &amp; Storage Rules</span><span class="count"></span></li>
+  </ul>
+</div>
+
+<!-- ==================== PART A: API SPECIFICATION ==================== -->
+
+<div class="section" style="page-break-before: avoid;">
+  <div style="background: #0f172a; color: #10b981; padding: 16px 20px; border-radius: 10px; margin-bottom: 20px;">
+    <h2 style="font-size: 18pt; font-weight: 800; margin: 0;">PART A</h2>
+    <p style="font-size: 11pt; color: #94a3b8; margin: 4px 0 0;">API Specification &mdash; 20 Groups, 75 Endpoints</p>
+  </div>
+</div>
+
+<!-- SECTION 1 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-title">Authentication &amp; User Management</div>
+  </div>
+  <p class="section-desc">Handles user authentication, registration, password management, and profile operations. All other endpoints require a valid JWT token.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Login must validate against <code>users</code> table with <code>password_hash</code> verification</li>
+      <li>JWT must include: <code>user_id</code>, <code>role</code>, <code>school_id</code>, <code>is_active</code></li>
+      <li>If <code>must_change_password = true</code>, login returns a flag forcing password reset before any other API access</li>
+      <li>Registration for students/guardians requires a valid <code>school_id</code> reference</li>
+      <li>Role field is immutable after creation &mdash; only super_admin can change roles</li>
+      <li>Failed login attempts must be rate-limited (max 5 per 15 minutes per email)</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1.1</td><td><span class="method method-post">POST</span></td><td class="endpoint">/auth/login</td><td>Authenticate by email/phone + password. Returns JWT + user profile with role, education_level, school_id. Checks is_active flag.</td></tr>
+      <tr><td>1.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/auth/logout</td><td>Invalidate current session/token. Client discards stored credentials.</td></tr>
+      <tr><td>1.3</td><td><span class="method method-post">POST</span></td><td class="endpoint">/auth/register</td><td>Register new user (student, teacher, guardian). Validates against institution records. Auto-assigns education_level from school type.</td></tr>
+      <tr><td>1.4</td><td><span class="method method-post">POST</span></td><td class="endpoint">/auth/reset-password</td><td>Initiate password reset. Sends reset link via email/SMS to registered contact.</td></tr>
+      <tr><td>1.5</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/auth/change-password</td><td>Update password. Required for must_change_password first-login flow. Must validate current password.</td></tr>
+      <tr><td>1.6</td><td><span class="method method-get">GET</span></td><td class="endpoint">/users/{id}</td><td>Get full user profile with role-specific fields (education_level, school_id, guardian links).</td></tr>
+      <tr><td>1.7</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/users/{id}</td><td>Update profile: full_name, phone_number, email. Role and education_level are immutable.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 2 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-title">Institution Management</div>
+  </div>
+  <p class="section-desc">CRUD for educational institutions. Each institution has a type that determines terminology and feature behavior across the platform.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Maps to existing <code>schools</code> table</li>
+      <li><code>school_id</code> (text) is the human-readable code (e.g. LUB-2026), <code>id</code> (uuid) is the primary key</li>
+      <li>Creating a school auto-creates the admin user account and sends credentials</li>
+      <li>Status transitions: trial &rarr; active &rarr; suspended &rarr; expired. Cannot skip steps.</li>
+      <li>School admin can only access their own school_id data</li>
+      <li>Stats endpoint must compute aggregates from students, teachers, classes tables (not stored)</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>2.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions</td><td>List all institutions. Super admin only. Filter by type, district, status, tier. Paginated.</td></tr>
+      <tr><td>2.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/institutions</td><td>Create institution. Includes name, type, regNo, district, tier, admin assignment. Super admin only.</td></tr>
+      <tr><td>2.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}</td><td>Get institution with computed stats: student count, staff count, active classes, subscription status.</td></tr>
+      <tr><td>2.4</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/institutions/{id}</td><td>Update institution profile: motto, district, tier, settings. School admin (own) or super admin.</td></tr>
+      <tr><td>2.5</td><td><span class="method method-patch">PATCH</span></td><td class="endpoint">/institutions/{id}/status</td><td>Change status: active, suspended, trial, expired. Super admin only.</td></tr>
+      <tr><td>2.6</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/stats</td><td>Aggregated dashboard stats: total students (active/inactive), staff, classes, avg attendance %, income/expense totals.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 3 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div class="section-title">Class / Program / Batch Management</div>
+  </div>
+  <div class="level-badges">
+    <span class="level-badge level-primary">Primary: Classes</span>
+    <span class="level-badge level-secondary">Secondary: Classes</span>
+    <span class="level-badge level-tertiary">Tertiary: Programs</span>
+    <span class="level-badge level-university">University: Courses</span>
+    <span class="level-badge level-vocational">Vocational: Batches</span>
+  </div>
+  <p class="section-desc">Organizational units within an institution. Terminology adapts to education level. Maps to existing <code>classes</code> table.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Maps to existing <code>classes</code> table (class_name, class_level, stream)</li>
+      <li>Teacher assignment uses <code>teacher_class_assignments</code> junction table</li>
+      <li>Cannot delete a class that has active students enrolled</li>
+      <li>class_level must match the institution's education level type</li>
+      <li>Student count is computed from students table, not stored</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>3.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/classes</td><td>List classes. Filter by level, stream. Returns teacher name, student count, subject count.</td></tr>
+      <tr><td>3.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/institutions/{id}/classes</td><td>Create class. Admin assigns level, stream, class teacher.</td></tr>
+      <tr><td>3.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/classes/{id}</td><td>Class detail: name, level, stream, teacher, student count, subjects, attendance rate.</td></tr>
+      <tr><td>3.4</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/classes/{id}</td><td>Update class: rename, reassign teacher, change stream. Cannot change level after creation.</td></tr>
+      <tr><td>3.5</td><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/classes/{id}</td><td>Archive class. Soft delete. Requires zero active students.</td></tr>
+      <tr><td>3.6</td><td><span class="method method-get">GET</span></td><td class="endpoint">/classes/{id}/students</td><td>List students in a class. Returns name, regNo, status, attendance %, avg score.</td></tr>
+      <tr><td>3.7</td><td><span class="method method-get">GET</span></td><td class="endpoint">/teachers/{id}/classes</td><td>List classes assigned to a teacher. Uses teacher_class_assignments table.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 4 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-title">Student Management</div>
+  </div>
+  <div class="level-badges">
+    <span class="level-badge level-primary">Primary: Pupils</span>
+    <span class="level-badge level-secondary">Secondary: Students</span>
+    <span class="level-badge level-tertiary">Tertiary: Students</span>
+    <span class="level-badge level-university">University: Students</span>
+    <span class="level-badge level-vocational">Vocational: Trainees</span>
+  </div>
+  <p class="section-desc">Full lifecycle management of students. Maps to existing <code>students</code> table linked to <code>users</code> table.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Maps to <code>students</code> table (user_id FK, school_id FK, class_id FK, student_id text)</li>
+      <li>Creating a student also creates a <code>users</code> record with role='student'</li>
+      <li><code>student_id</code> is auto-generated using institution prefix (e.g. LUB/2026/007)</li>
+      <li>Deactivating a student sets <code>users.is_active = false</code>, not a hard delete</li>
+      <li>Guardian linking requires the new <code>guardian_students</code> table (schema gap - see R4)</li>
+      <li>Performance endpoint must join student_progress + assessments to compute grades per education level scale</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>4.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/students</td><td>List students. Filter by status, class. Search by name/regNo. Paginated.</td></tr>
+      <tr><td>4.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/institutions/{id}/students</td><td>Enroll student. Creates user + student records. Links to class and guardian. Auto-generates regNo.</td></tr>
+      <tr><td>4.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/students/{id}</td><td>Full profile: personal info, class, guardian, attendance %, avg score, email, status.</td></tr>
+      <tr><td>4.4</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/students/{id}</td><td>Update details or toggle active/inactive status.</td></tr>
+      <tr><td>4.5</td><td><span class="method method-get">GET</span></td><td class="endpoint">/students/{id}/performance</td><td>Grades across all subjects with education-level grading scale.</td></tr>
+      <tr><td>4.6</td><td><span class="method method-get">GET</span></td><td class="endpoint">/guardians/{id}/children</td><td>List children linked to guardian. Cross-institution. Uses guardian_students table.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 5 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-title">Staff Management</div>
+  </div>
+  <div class="level-badges">
+    <span class="level-badge level-primary">Teachers</span>
+    <span class="level-badge level-secondary">Teachers</span>
+    <span class="level-badge level-tertiary">Lecturers</span>
+    <span class="level-badge level-university">Lecturers</span>
+    <span class="level-badge level-vocational">Instructors</span>
+  </div>
+  <p class="section-desc">Manages teaching staff. Maps to existing <code>teachers</code> table linked to <code>users</code> and <code>teacher_class_assignments</code>.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Maps to <code>teachers</code> table (user_id FK, school_id FK, staff_id text, assigned_subjects text[])</li>
+      <li>Creating a teacher also creates a <code>users</code> record with role='teacher'</li>
+      <li><code>staff_id</code> prefix varies by education level: TCH (primary/secondary), LEC (tertiary/university), INS (vocational)</li>
+      <li>Subject and class assignments managed through <code>teacher_class_assignments</code> junction table</li>
+      <li>Status changes (active/on_leave) update <code>users.is_active</code></li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>5.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/staff</td><td>List staff. Filter by status, search by name/subject. Returns staffId, subjects, classes, workload.</td></tr>
+      <tr><td>5.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/institutions/{id}/staff</td><td>Register staff. Creates user + teacher records. Assigns staffId, subjects, classes.</td></tr>
+      <tr><td>5.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/staff/{id}</td><td>Full profile: subjects, classes, join date, workload, contact info, status.</td></tr>
+      <tr><td>5.4</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/staff/{id}</td><td>Update details, reassign classes/subjects. Cannot change institution.</td></tr>
+      <tr><td>5.5</td><td><span class="method method-patch">PATCH</span></td><td class="endpoint">/staff/{id}/status</td><td>Toggle status: active, on_leave, inactive.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 6 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <div class="section-title">Subjects / Courses</div>
+  </div>
+  <p class="section-desc">Academic subjects taught within classes. Maps to <code>teacher_class_assignments</code> (subject field) and <code>courses</code> table.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Subjects are derived from <code>teacher_class_assignments.subject</code> field (text)</li>
+      <li>Progress tracking requires the new <code>student_subject_progress</code> table (schema gap - see R4)</li>
+      <li>Topic-level tracking requires a new <code>topics</code> table (schema gap - see R4)</li>
+      <li>Subject lists vary by education level: 5-8 (primary), 4-10 (secondary), 3-8 (tertiary/university), 3-4 (vocational)</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>6.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/classes/{id}/subjects</td><td>List subjects for a class. Returns instructor, student count, progress %.</td></tr>
+      <tr><td>6.2</td><td><span class="method method-get">GET</span></td><td class="endpoint">/students/{id}/subjects</td><td>List student's enrolled subjects with individual progress and grade.</td></tr>
+      <tr><td>6.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/subjects/{id}</td><td>Subject detail: name, instructor, topics, assignment count.</td></tr>
+      <tr><td>6.4</td><td><span class="method method-get">GET</span></td><td class="endpoint">/subjects/{id}/topics</td><td>List topics within a subject with per-student completion status.</td></tr>
+      <tr><td>6.5</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/subjects/{id}/progress</td><td>Update student's progress. Recalculated from topic completion + assignment scores.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 7 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <div class="section-title">Assignments</div>
+  </div>
+  <p class="section-desc">Full assignment lifecycle. Maps to existing <code>assessments</code> and <code>student_progress</code> tables.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Maps to <code>assessments</code> table (title, subject, assessment_type, max_points, weight_percentage, due_date, instructions)</li>
+      <li>Submissions map to <code>student_progress</code> table (student_id, assessment_id, score_obtained, teacher_remarks, submitted_at)</li>
+      <li><strong>Schema gap:</strong> student_progress lacks <code>submission_url</code>, <code>status</code> (pending/submitted/graded), and <code>graded_at</code> fields</li>
+      <li>Assignment types adapt to education level: Homework/Quiz/Test (primary), +Lab/Project (secondary), +Research (university), +Practical (vocational)</li>
+      <li>Grading triggers notification to student and guardian</li>
+      <li>Cannot delete assignment with existing submissions</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>7.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/classes/{id}/assignments</td><td>List assignments for a class. Filter by status. Returns submission counts.</td></tr>
+      <tr><td>7.2</td><td><span class="method method-get">GET</span></td><td class="endpoint">/students/{id}/assignments</td><td>List student's assignments. Filter by status. Search by title. Returns score/feedback.</td></tr>
+      <tr><td>7.3</td><td><span class="method method-post">POST</span></td><td class="endpoint">/assignments</td><td>Create assignment (teacher). Sets title, class, type, due date, points, instructions.</td></tr>
+      <tr><td>7.4</td><td><span class="method method-get">GET</span></td><td class="endpoint">/assignments/{id}</td><td>Assignment detail: instructions, submission stats, due date, points.</td></tr>
+      <tr><td>7.5</td><td><span class="method method-post">POST</span></td><td class="endpoint">/assignments/{id}/submit</td><td>Student submits. Changes status pending &rarr; submitted. Optional file attachment.</td></tr>
+      <tr><td>7.6</td><td><span class="method method-get">GET</span></td><td class="endpoint">/assignments/{id}/submissions</td><td>List all submissions for grading. Teacher only. Returns student name, score, feedback.</td></tr>
+      <tr><td>7.7</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/assignments/{id}/submissions/{studentId}</td><td>Grade submission: record score + feedback. Status &rarr; graded. Triggers notification.</td></tr>
+      <tr><td>7.8</td><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/assignments/{id}</td><td>Remove assignment. Only if no submissions exist.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 8 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <div class="section-title">Study Materials</div>
+  </div>
+  <p class="section-desc">Educational resources uploaded by teachers. Maps to existing <code>courses</code> table.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Maps to <code>courses</code> table (title, subject, file_url, verification_status, allow_download)</li>
+      <li>Upload creates a record with <code>verification_status = 'pending'</code></li>
+      <li>Admin approval sets <code>verification_status = 'approved'</code> making it visible to students</li>
+      <li><strong>Schema gap:</strong> No download tracking table exists. Need <code>course_downloads</code> table.</li>
+      <li>File uploads go to Supabase Storage bucket, URL stored in <code>file_url</code></li>
+      <li>Only PDF, PPT, PPTX, and video files allowed (max 100MB)</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>8.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/materials</td><td>List materials. Filter by subject, type. Search by title. Returns download count, approval status.</td></tr>
+      <tr><td>8.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/materials</td><td>Upload material (teacher). Multipart: file + metadata. Status = pending for admin review.</td></tr>
+      <tr><td>8.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/materials/{id}</td><td>Get metadata + generate time-limited download URL.</td></tr>
+      <tr><td>8.4</td><td><span class="method method-post">POST</span></td><td class="endpoint">/materials/{id}/download</td><td>Track download (increment count) and return file URL.</td></tr>
+      <tr><td>8.5</td><td><span class="method method-patch">PATCH</span></td><td class="endpoint">/materials/{id}/status</td><td>Approve or reject pending material. Admin only.</td></tr>
+      <tr><td>8.6</td><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/materials/{id}</td><td>Remove material and stored file. Teacher (own) or admin (any).</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 9 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">9</div>
+    <div class="section-title">Attendance</div>
+  </div>
+  <p class="section-desc">Daily attendance tracking per class.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li><strong>Schema gap:</strong> No attendance table exists. Need <code>attendance_records</code> table.</li>
+      <li>One record per student per class per date (unique constraint on student_id + class_id + date)</li>
+      <li>Only teachers assigned to a class can record attendance for that class</li>
+      <li>Attendance rate below 80% triggers alert notification to admin and guardian</li>
+      <li>Export generates CSV/PDF server-side</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>9.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/classes/{id}/attendance</td><td>Get attendance for a class. Filter by date range. Returns present/absent/late counts.</td></tr>
+      <tr><td>9.2</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/attendance</td><td>Aggregated attendance across all classes for a date. Admin dashboard.</td></tr>
+      <tr><td>9.3</td><td><span class="method method-post">POST</span></td><td class="endpoint">/classes/{id}/attendance</td><td>Record daily attendance. Array of student IDs with status. Teacher only.</td></tr>
+      <tr><td>9.4</td><td><span class="method method-get">GET</span></td><td class="endpoint">/students/{id}/attendance</td><td>Individual student attendance history with cumulative percentage.</td></tr>
+      <tr><td>9.5</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/attendance/export</td><td>Export attendance report as CSV/PDF. Admin only.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 10 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div class="section-title">Finance</div>
+  </div>
+  <p class="section-desc">Financial transaction tracking for institutions. All amounts in UGX.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li><strong>Schema gap:</strong> No finance/transactions table exists. Need <code>transactions</code> table.</li>
+      <li>Categories: Tuition, Boarding, Salaries, Materials, Exams, Utilities, PTA, Grants</li>
+      <li>Running balance computed from sum of all prior transactions (not stored)</li>
+      <li>Only school admin can create/edit transactions</li>
+      <li>Pending transactions can be updated; paid/collected transactions are immutable</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>10.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/transactions</td><td>List transactions. Filter by type, category, date range, status.</td></tr>
+      <tr><td>10.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/institutions/{id}/transactions</td><td>Record transaction. Admin only.</td></tr>
+      <tr><td>10.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/transactions/summary</td><td>Aggregated: total income, expenses, net balance.</td></tr>
+      <tr><td>10.4</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/transactions/{id}</td><td>Update status (pending &rarr; paid/collected). Pending items only.</td></tr>
+      <tr><td>10.5</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/finance/export</td><td>Export financial report as CSV/PDF.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 11 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">11</div>
+    <div class="section-title">Messaging / Chat</div>
+  </div>
+  <p class="section-desc">Real-time messaging supporting direct and group conversations.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Existing <code>messages</code> table has conversation_id but no conversations table</li>
+      <li><strong>Schema gap:</strong> Need <code>conversations</code> table (type: direct/group, group_name, created_by)</li>
+      <li><strong>Schema gap:</strong> Need <code>conversation_members</code> table (conversation_id, user_id, last_read_at)</li>
+      <li><strong>Schema gap:</strong> Need <code>users.last_seen</code> column for online status</li>
+      <li>Group conversations auto-include all class members when created for a class</li>
+      <li>Unread count = messages where created_at > member's last_read_at</li>
+      <li>Real-time delivery via Supabase Realtime (Postgres Changes) on messages table</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>11.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/users/{id}/contacts</td><td>List chat contacts. Returns last message, unread count, online status, isGroup flag.</td></tr>
+      <tr><td>11.2</td><td><span class="method method-get">GET</span></td><td class="endpoint">/conversations/{id}/messages</td><td>Message history. Paginated, chronological. Returns sender, content, timestamp.</td></tr>
+      <tr><td>11.3</td><td><span class="method method-post">POST</span></td><td class="endpoint">/conversations/{id}/messages</td><td>Send message. Updates lastMessage, increments unread count. Triggers push notification.</td></tr>
+      <tr><td>11.4</td><td><span class="method method-post">POST</span></td><td class="endpoint">/conversations</td><td>Start new conversation (direct or group). Auto-creates member records.</td></tr>
+      <tr><td>11.5</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/conversations/{id}/read</td><td>Mark conversation as read. Updates last_read_at for the user.</td></tr>
+      <tr><td>11.6</td><td><span class="method method-post">POST</span></td><td class="endpoint">/users/{id}/message</td><td>Send direct message to any user. Auto-creates conversation if needed.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 12 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">12</div>
+    <div class="section-title">Whiteboard Sessions</div>
+  </div>
+  <p class="section-desc">Virtual collaborative whiteboard sessions created by teachers.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li><strong>Schema gap:</strong> No whiteboard_sessions table exists. Need to create it.</li>
+      <li>External link is generated/stored, not created by the platform</li>
+      <li>Only teachers can create sessions; students can only join</li>
+      <li>Participant count is tracked via a join event (not a separate table)</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>12.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/whiteboard-sessions</td><td>List sessions. Filter by class, date.</td></tr>
+      <tr><td>12.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/whiteboard-sessions</td><td>Create session (teacher). Generates link, assigns class.</td></tr>
+      <tr><td>12.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/whiteboard-sessions/{id}</td><td>Session detail with link and participant list.</td></tr>
+      <tr><td>12.4</td><td><span class="method method-post">POST</span></td><td class="endpoint">/whiteboard-sessions/{id}/join</td><td>Student joins. Increments participant count. Returns link URL.</td></tr>
+      <tr><td>12.5</td><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/whiteboard-sessions/{id}</td><td>Cancel session. Teacher (own) or admin.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 13 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">13</div>
+    <div class="section-title">Communities / Study Groups</div>
+  </div>
+  <p class="section-desc">Student/teacher-created study communities organized by subject.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li><strong>Schema gap:</strong> No communities tables exist. Need: <code>communities</code>, <code>community_members</code>, <code>community_messages</code></li>
+      <li>Communities are scoped to an institution (school_id)</li>
+      <li>Creator is auto-added as first member with role='admin'</li>
+      <li>Member count is computed from community_members, not stored</li>
+      <li>Unread count = community_messages where created_at > member's last_read_at</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>13.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/communities</td><td>List communities. Filter by subject, membership status.</td></tr>
+      <tr><td>13.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/communities</td><td>Create community. Sets name, subject, creator as first member.</td></tr>
+      <tr><td>13.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/communities/{id}</td><td>Community detail: members, last activity, recent messages.</td></tr>
+      <tr><td>13.4</td><td><span class="method method-post">POST</span></td><td class="endpoint">/communities/{id}/join</td><td>Join community. Increments member count.</td></tr>
+      <tr><td>13.5</td><td><span class="method method-post">POST</span></td><td class="endpoint">/communities/{id}/leave</td><td>Leave community. Decrements member count.</td></tr>
+      <tr><td>13.6</td><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/communities/{id}</td><td>Dissolve community. Creator only.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 14 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">14</div>
+    <div class="section-title">AI Tutor</div>
+  </div>
+  <p class="section-desc">AI-powered tutoring with subject-specific answers.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li><strong>Schema gap:</strong> Need <code>ai_conversations</code> table for storing Q&amp;A history</li>
+      <li>AI responses should be generated server-side (Edge Function) to protect API keys</li>
+      <li>Rate limit: max 20 questions per student per day</li>
+      <li>Conversation history is private to the student (RLS: auth.uid() = user_id)</li>
+      <li>Suggestions are generated from past conversation patterns + enrolled subjects</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>14.1</td><td><span class="method method-post">POST</span></td><td class="endpoint">/ai/tutor/ask</td><td>Submit question with subject context. Returns AI answer. Stores conversation.</td></tr>
+      <tr><td>14.2</td><td><span class="method method-get">GET</span></td><td class="endpoint">/users/{id}/ai/conversations</td><td>List past AI conversations. Filter by subject.</td></tr>
+      <tr><td>14.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/users/{id}/ai/suggestions</td><td>Personalized question suggestions based on subject and past activity.</td></tr>
+      <tr><td>14.4</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/ai/subjects</td><td>Available AI tutor subjects for the institution's education level.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 15 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">15</div>
+    <div class="section-title">Inclusive Learning / Accessibility</div>
+  </div>
+  <p class="section-desc">Accessibility tools and special needs resources. Preferences persist across sessions.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Maps to existing <code>accessibility_preferences</code> table (created in migration 003)</li>
+      <li>Text-to-Speech and Voice Input use browser Web APIs (no server needed for basic functionality)</li>
+      <li>High contrast and dyslexia mode apply CSS changes client-side, preferences saved server-side</li>
+      <li>Braille conversion is client-side (Grade 1 mapping table)</li>
+      <li>Sign language video lessons require video storage (Supabase Storage)</li>
+      <li>Preferences are loaded on login and saved on any change (debounced, 2s delay)</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>15.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/users/{id}/accessibility-preferences</td><td>Get saved accessibility settings: active tools, high contrast, dyslexia, TTS rate/pitch.</td></tr>
+      <tr><td>15.2</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/users/{id}/accessibility-preferences</td><td>Save/update preferences. Persists across sessions.</td></tr>
+      <tr><td>15.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/institutions/{id}/accessibility-tools</td><td>List available tools and resources for the institution.</td></tr>
+      <tr><td>15.4</td><td><span class="method method-post">POST</span></td><td class="endpoint">/ai/tts</td><td>Server-side TTS conversion. Accepts text, returns audio stream. Fallback for browsers without Web Speech API.</td></tr>
+      <tr><td>15.5</td><td><span class="method method-post">POST</span></td><td class="endpoint">/ai/speech-to-text</td><td>Server-side voice transcription. Accepts audio, returns text. Fallback for browsers without SpeechRecognition.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 16 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">16</div>
+    <div class="section-title">Lifelong Learning</div>
+  </div>
+  <p class="section-desc">Supplementary skill-building courses beyond the academic curriculum.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li><strong>Schema gap:</strong> Need <code>lifelong_courses</code>, <code>lifelong_modules</code>, <code>lifelong_enrollments</code>, <code>lifelong_module_progress</code> tables</li>
+      <li>Courses are global (not institution-specific) but enrollment is per-user</li>
+      <li>Progress % = (completed modules / total modules) * 100, computed not stored</li>
+      <li>Categories: Life Skills, Technology, Business, Health, Creative, Civics, Finance, Leadership, Career</li>
+      <li>Completing all modules triggers a completion notification</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>16.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/lifelong-learning/courses</td><td>List courses. Filter by category. Returns module count, duration, level.</td></tr>
+      <tr><td>16.2</td><td><span class="method method-get">GET</span></td><td class="endpoint">/lifelong-learning/courses/{id}</td><td>Course detail: description, module list, difficulty, category.</td></tr>
+      <tr><td>16.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/users/{id}/lifelong-learning/enrollments</td><td>List enrolled courses with progress %.</td></tr>
+      <tr><td>16.4</td><td><span class="method method-post">POST</span></td><td class="endpoint">/users/{id}/lifelong-learning/enroll</td><td>Enroll in a course. Initializes all modules as incomplete.</td></tr>
+      <tr><td>16.5</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/users/{id}/lifelong-learning/{courseId}/modules/{moduleId}/complete</td><td>Mark module complete. Recalculates progress.</td></tr>
+      <tr><td>16.6</td><td><span class="method method-post">POST</span></td><td class="endpoint">/users/{id}/lifelong-learning/{courseId}/leave</td><td>Unenroll from a course.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 17 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">17</div>
+    <div class="section-title">Notifications</div>
+  </div>
+  <p class="section-desc">System-wide notification management. Maps to existing <code>notifications</code> table.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>Maps to existing <code>notifications</code> table (user_id, title, message, notification_type, is_read)</li>
+      <li>Notifications are generated by system events (assignment due, grade posted, message received)</li>
+      <li>Admin can broadcast notifications to all users in an institution</li>
+      <li>Unread count endpoint must be lightweight (used on every page load)</li>
+      <li>Real-time delivery via Supabase Realtime on notifications table</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>17.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/users/{id}/notifications</td><td>List notifications. Filter by read status, type. Sorted newest first.</td></tr>
+      <tr><td>17.2</td><td><span class="method method-post">POST</span></td><td class="endpoint">/notifications</td><td>Create notification. System-generated or admin-sent. Target user or broadcast.</td></tr>
+      <tr><td>17.3</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/notifications/{id}/read</td><td>Mark single notification as read.</td></tr>
+      <tr><td>17.4</td><td><span class="method method-put">PUT</span></td><td class="endpoint">/users/{id}/notifications/read-all</td><td>Mark all as read for a user.</td></tr>
+      <tr><td>17.5</td><td><span class="method method-get">GET</span></td><td class="endpoint">/users/{id}/notifications/unread-count</td><td>Get unread count for badge display. Lightweight.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 18 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">18</div>
+    <div class="section-title">Subscriptions</div>
+  </div>
+  <p class="section-desc">Guardian subscription management. Three plan tiers with Mobile Money and Bank Transfer payments.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li><strong>Schema gap:</strong> Need <code>subscriptions</code> and <code>subscription_payments</code> tables</li>
+      <li>Plans: Basic (UGX 20,000/mo), Premium (UGX 50,000/mo), Enterprise (UGX 100,000/mo)</li>
+      <li>Payment methods: Mobile Money (MTN/Airtel), Bank Transfer</li>
+      <li>Subscription remains active until end of billing period after cancellation</li>
+      <li>Feature gating: number of linked children depends on plan tier</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>18.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/subscriptions/plans</td><td>List plans with pricing, features, child limits. Public endpoint.</td></tr>
+      <tr><td>18.2</td><td><span class="method method-get">GET</span></td><td class="endpoint">/guardians/{id}/subscription</td><td>Current subscription: plan, status, billing date, payment method.</td></tr>
+      <tr><td>18.3</td><td><span class="method method-post">POST</span></td><td class="endpoint">/guardians/{id}/subscription</td><td>Subscribe or upgrade. Records payment method, starts billing cycle.</td></tr>
+      <tr><td>18.4</td><td><span class="method method-post">POST</span></td><td class="endpoint">/guardians/{id}/subscription/cancel</td><td>Cancel subscription. Active until end of current period.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 19 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">19</div>
+    <div class="section-title">Guardian-Linked Children &amp; Performance</div>
+  </div>
+  <p class="section-desc">Guardian view of children's academic performance across institutions.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li><strong>Schema gap:</strong> Need <code>guardian_students</code> table (guardian_id, student_id, relationship)</li>
+      <li>Linking a child requires the student's regNo - guardian enters it, system validates</li>
+      <li>Grading scales adapt per education level: UNEB D1-F9 (secondary), GPA 4.0 (university), GPA 5.0 (tertiary), Distinction/Credit/Pass/Refer (vocational), % + Grade (primary)</li>
+      <li>Guardian can only view data for their linked children (RLS enforced)</li>
+      <li>Performance data is read-only for guardians</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>19.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/guardians/{id}/children</td><td>List linked children with school, class, education level, performance summary.</td></tr>
+      <tr><td>19.2</td><td><span class="method method-get">GET</span></td><td class="endpoint">/guardians/{id}/children/{studentId}/grades</td><td>Child's subject grades with level-appropriate grading scale.</td></tr>
+      <tr><td>19.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/guardians/{id}/children/{studentId}/upcoming</td><td>Child's upcoming assignments with due dates.</td></tr>
+      <tr><td>19.4</td><td><span class="method method-get">GET</span></td><td class="endpoint">/guardians/{id}/children/{studentId}/recent-grades</td><td>Child's most recently graded assignments.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 20 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">20</div>
+    <div class="section-title">Platform Analytics</div>
+  </div>
+  <p class="section-desc">Super admin analytics for platform-wide visibility.</p>
+  <div class="rule-box">
+    <h4>&#9888; Implementation Rules</h4>
+    <ul>
+      <li>All endpoints are super admin only</li>
+      <li>Stats are computed from aggregated queries across all institutions</li>
+      <li>Revenue trend uses transactions table (schema gap)</li>
+      <li>System health checks: API response time, DB connection, storage usage, email delivery rate</li>
+      <li>Cache analytics results for 5 minutes to avoid heavy queries on every dashboard load</li>
+    </ul>
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:90px">Method</th><th style="width:260px">Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>20.1</td><td><span class="method method-get">GET</span></td><td class="endpoint">/platform/stats</td><td>Platform-wide aggregates: institutions by level, users by role, revenue, subscriptions.</td></tr>
+      <tr><td>20.2</td><td><span class="method method-get">GET</span></td><td class="endpoint">/platform/institutions-by-level</td><td>Institution count per education level with growth rate.</td></tr>
+      <tr><td>20.3</td><td><span class="method method-get">GET</span></td><td class="endpoint">/platform/revenue-trend</td><td>Monthly revenue trend (12 months). Income, expenses, net.</td></tr>
+      <tr><td>20.4</td><td><span class="method method-get">GET</span></td><td class="endpoint">/platform/system-health</td><td>Service status: API, Database, Storage, Email. Returns operational/degraded/down.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ==================== PART B: IMPLEMENTATION RULES ==================== -->
+
+<div class="section" style="page-break-before: always;">
+  <div style="background: #0f172a; color: #10b981; padding: 16px 20px; border-radius: 10px; margin-bottom: 20px;">
+    <h2 style="font-size: 18pt; font-weight: 800; margin: 0;">PART B</h2>
+    <p style="font-size: 11pt; color: #94a3b8; margin: 4px 0 0;">Implementation Rules &mdash; Access Control, Workflows, Schema Gaps, Validation</p>
+  </div>
+</div>
+
+<!-- R1: Role-Based Access Control -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">R1</div>
+    <div class="section-title">Role-Based Access Control Matrix</div>
+  </div>
+  <p class="section-desc">Every API endpoint must enforce role-based access. The matrix below defines which roles can access which API groups and what restrictions apply.</p>
+  <table>
+    <thead><tr><th>API Group</th><th>Student</th><th>Teacher</th><th>School Admin</th><th>Super Admin</th><th>Guardian</th></tr></thead>
+    <tbody>
+      <tr><td>1. Auth</td><td style="color:#047857">Login/Profile</td><td style="color:#047857">Login/Profile</td><td style="color:#047857">Login/Profile</td><td style="color:#047857">Login/Profile</td><td style="color:#047857">Login/Profile</td></tr>
+      <tr><td>2. Institutions</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#047857">Own school only</td><td style="color:#047857">Full CRUD</td><td style="color:#dc2626">None</td></tr>
+      <tr><td>3. Classes</td><td style="color:#2563eb">Read own</td><td style="color:#047857">Read assigned</td><td style="color:#047857">Full CRUD</td><td style="color:#2563eb">Read all</td><td style="color:#2563eb">Read child's</td></tr>
+      <tr><td>4. Students</td><td style="color:#2563eb">Read own</td><td style="color:#2563eb">Read class students</td><td style="color:#047857">Full CRUD</td><td style="color:#2563eb">Read all</td><td style="color:#2563eb">Read linked</td></tr>
+      <tr><td>5. Staff</td><td style="color:#dc2626">None</td><td style="color:#2563eb">Read own profile</td><td style="color:#047857">Full CRUD</td><td style="color:#2563eb">Read all</td><td style="color:#dc2626">None</td></tr>
+      <tr><td>6. Subjects</td><td style="color:#2563eb">Read enrolled</td><td style="color:#2563eb">Read assigned</td><td style="color:#047857">Read all</td><td style="color:#2563eb">Read all</td><td style="color:#2563eb">Read child's</td></tr>
+      <tr><td>7. Assignments</td><td style="color:#047857">Read/Submit own</td><td style="color:#047857">CRUD + Grade</td><td style="color:#2563eb">Read all</td><td style="color:#2563eb">Read all</td><td style="color:#2563eb">Read child's</td></tr>
+      <tr><td>8. Materials</td><td style="color:#2563eb">Read/Download</td><td style="color:#047857">Upload/Read</td><td style="color:#047857">Approve/Read</td><td style="color:#2563eb">Read all</td><td style="color:#dc2626">None</td></tr>
+      <tr><td>9. Attendance</td><td style="color:#2563eb">Read own</td><td style="color:#047857">Record + Read</td><td style="color:#047857">Read + Export</td><td style="color:#2563eb">Read all</td><td style="color:#2563eb">Read child's</td></tr>
+      <tr><td>10. Finance</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#047857">Full CRUD</td><td style="color:#2563eb">Read all</td><td style="color:#dc2626">None</td></tr>
+      <tr><td>11. Messaging</td><td style="color:#047857">Send/Read own</td><td style="color:#047857">Send/Read own</td><td style="color:#047857">Send/Read own</td><td style="color:#047857">Send/Read own</td><td style="color:#047857">Send/Read own</td></tr>
+      <tr><td>12. Whiteboard</td><td style="color:#2563eb">Join/Read</td><td style="color:#047857">Create/Read</td><td style="color:#2563eb">Read</td><td style="color:#2563eb">Read</td><td style="color:#dc2626">None</td></tr>
+      <tr><td>13. Communities</td><td style="color:#047857">CRUD + Join</td><td style="color:#047857">CRUD + Join</td><td style="color:#2563eb">Read</td><td style="color:#2563eb">Read</td><td style="color:#dc2626">None</td></tr>
+      <tr><td>14. AI Tutor</td><td style="color:#047857">Ask/Read own</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#2563eb">Read stats</td><td style="color:#dc2626">None</td></tr>
+      <tr><td>15. Accessibility</td><td style="color:#047857">Read/Write own</td><td style="color:#dc2626">None</td><td style="color:#2563eb">Read</td><td style="color:#2563eb">Read</td><td style="color:#dc2626">None</td></tr>
+      <tr><td>16. Lifelong</td><td style="color:#047857">Enroll/Complete</td><td style="color:#dc2626">None</td><td style="color:#2563eb">Read stats</td><td style="color:#2563eb">Read stats</td><td style="color:#dc2626">None</td></tr>
+      <tr><td>17. Notifications</td><td style="color:#047857">Read/Write own</td><td style="color:#047857">Read/Write own</td><td style="color:#047857">Read/Write + Broadcast</td><td style="color:#047857">Read/Write + Broadcast</td><td style="color:#047857">Read/Write own</td></tr>
+      <tr><td>18. Subscriptions</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#2563eb">Read all</td><td style="color:#047857">Subscribe/Manage</td></tr>
+      <tr><td>19. Guardian-Children</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#047857">Read linked</td></tr>
+      <tr><td>20. Analytics</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#dc2626">None</td><td style="color:#047857">Full access</td><td style="color:#dc2626">None</td></tr>
+    </tbody>
+  </table>
+  <div class="info-box">
+    <h4>Legend</h4>
+    <p><span style="color:#047857; font-weight:700;">Full CRUD</span> = Create, Read, Update, Delete &nbsp; <span style="color:#2563eb; font-weight:700;">Read</span> = Read only &nbsp; <span style="color:#dc2626; font-weight:700;">None</span> = No access &nbsp; "Own" = Only own records</p>
+  </div>
+</div>
+
+<!-- R2: Cross-Role Workflow Rules -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">R2</div>
+    <div class="section-title">Cross-Role Workflow Rules</div>
+  </div>
+  <p class="section-desc">These workflows define how data flows between roles. Each workflow must be implemented as an atomic operation or event-driven chain.</p>
+
+  <div class="cross-role">
+    <h4>W1: Assignment Lifecycle (Teacher &rarr; Student &rarr; Guardian)</h4>
+    <ul style="padding-left:18px; font-size:9pt; color:#1e40af;">
+      <li><strong>Step 1:</strong> Teacher creates assignment &rarr; INSERT into assessments table &rarr; Notification sent to all students in class</li>
+      <li><strong>Step 2:</strong> Student views assignment &rarr; READ from assessments (filtered by class_id)</li>
+      <li><strong>Step 3:</strong> Student submits &rarr; INSERT into student_progress (status='submitted', submitted_at=now()) &rarr; Notification to teacher</li>
+      <li><strong>Step 4:</strong> Teacher grades &rarr; UPDATE student_progress (score_obtained, teacher_remarks, status='graded', graded_at=now()) &rarr; Notification to student AND guardian</li>
+      <li><strong>Step 5:</strong> Guardian views grade &rarr; READ from student_progress (via guardian_students link)</li>
+    </ul>
+  </div>
+
+  <div class="cross-role">
+    <h4>W2: Student Enrollment (Admin &rarr; Teacher &rarr; Student)</h4>
+    <ul style="padding-left:18px; font-size:9pt; color:#1e40af;">
+      <li><strong>Step 1:</strong> Admin enrolls student &rarr; INSERT users + students records &rarr; Assign to class</li>
+      <li><strong>Step 2:</strong> Student appears in teacher's class roster &rarr; Teacher can view student details</li>
+      <li><strong>Step 3:</strong> Student gets access to class assignments, materials, and communities</li>
+      <li><strong>Step 4:</strong> Guardian links child via regNo &rarr; INSERT guardian_students &rarr; Guardian gets read access to child's data</li>
+    </ul>
+  </div>
+
+  <div class="cross-role">
+    <h4>W3: Material Upload &amp; Approval (Teacher &rarr; Admin &rarr; Student)</h4>
+    <ul style="padding-left:18px; font-size:9pt; color:#1e40af;">
+      <li><strong>Step 1:</strong> Teacher uploads material &rarr; INSERT courses (verification_status='pending') + Upload file to Storage</li>
+      <li><strong>Step 2:</strong> Admin reviews &rarr; UPDATE courses (verification_status='approved' or 'rejected') &rarr; Notification to teacher</li>
+      <li><strong>Step 3:</strong> If approved, material appears in student's study materials list (filtered by verification_status='approved')</li>
+    </ul>
+  </div>
+
+  <div class="cross-role">
+    <h4>W4: Attendance Alert (Teacher &rarr; Admin &rarr; Guardian)</h4>
+    <ul style="padding-left:18px; font-size:9pt; color:#1e40af;">
+      <li><strong>Step 1:</strong> Teacher records attendance &rarr; INSERT attendance_records</li>
+      <li><strong>Step 2:</strong> System checks: if student attendance rate drops below 80%, trigger notification</li>
+      <li><strong>Step 3:</strong> Notification sent to school admin AND linked guardian</li>
+    </ul>
+  </div>
+
+  <div class="cross-role">
+    <h4>W5: Institution Setup (Super Admin &rarr; School Admin &rarr; Teachers &rarr; Students)</h4>
+    <ul style="padding-left:18px; font-size:9pt; color:#1e40af;">
+      <li><strong>Step 1:</strong> Super admin creates institution &rarr; INSERT schools + admin user account</li>
+      <li><strong>Step 2:</strong> School admin logs in with must_change_password=true &rarr; Forced password reset</li>
+      <li><strong>Step 3:</strong> School admin creates classes, enrolls teachers and students</li>
+      <li><strong>Step 4:</strong> Teachers and students get access to their respective dashboards</li>
+    </ul>
+  </div>
+</div>
+
+<!-- R3: Education Level Adaptation -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">R3</div>
+    <div class="section-title">Education Level Adaptation Rules</div>
+  </div>
+  <p class="section-desc">The platform serves 5 education levels. Every API response must adapt terminology, grading scales, and feature behavior based on the institution's education level.</p>
+  <table>
+    <thead><tr><th>Concept</th><th>Primary</th><th>Secondary</th><th>Tertiary</th><th>University</th><th>Vocational</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Organizational Unit</strong></td><td>Class</td><td>Class</td><td>Program</td><td>Course</td><td>Batch</td></tr>
+      <tr><td><strong>Teaching Staff</strong></td><td>Teacher</td><td>Teacher</td><td>Lecturer</td><td>Lecturer</td><td>Instructor</td></tr>
+      <tr><td><strong>Learner</strong></td><td>Pupil</td><td>Student</td><td>Student</td><td>Student</td><td>Trainee</td></tr>
+      <tr><td><strong>Staff ID Prefix</strong></td><td>TCH</td><td>TCH</td><td>LEC</td><td>LEC</td><td>INS</td></tr>
+      <tr><td><strong>Grading Scale</strong></td><td>% + Grade (A-F)</td><td>UNEB D1-D2, C3-C6, P7-P8, F9</td><td>GPA 5.0</td><td>GPA 4.0</td><td>Distinction / Credit / Pass / Refer</td></tr>
+      <tr><td><strong>Assignment Types</strong></td><td>Homework, Quiz, Test</td><td>Homework, Quiz, Test, Project, Lab</td><td>Coursework, Exam</td><td>Assignment, Exam, Research</td><td>Practical, Assessment</td></tr>
+      <tr><td><strong>Exam Body</strong></td><td>UNEB (PLE)</td><td>UNEB (UCE/UACE)</td><td>UBTEB</td><td>University Senate</td><td>DIT/TVET</td></tr>
+      <tr><td><strong>Subject Count</strong></td><td>5-8</td><td>4-10</td><td>3-8</td><td>3-8</td><td>3-4</td></tr>
+      <tr><td><strong>Level Names</strong></td><td>P1-P7</td><td>S1-S6</td><td>Diploma/Certificate</td><td>Year 1-4</td><td>Level 1-3</td></tr>
+    </tbody>
+  </table>
+  <div class="rule-box">
+    <h4>&#9888; API Adaptation Rules</h4>
+    <ul>
+      <li>All list endpoints must accept an <code>education_level</code> parameter that filters and adapts terminology</li>
+      <li>Grading endpoints must return grades in the appropriate scale for the student's institution level</li>
+      <li>Assignment type enums must be validated against the institution's education level</li>
+      <li>Label strings (subjectLabel, instructorLabel, etc.) must be resolved server-side based on education_level</li>
+      <li>Frontend sends education_level in JWT; backend validates it matches the user's school type</li>
+    </ul>
+  </div>
+</div>
+
+<!-- R4: Database Schema Gaps -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">R4</div>
+    <div class="section-title">Database Schema Gaps &amp; Required Migrations</div>
+  </div>
+  <p class="section-desc">The existing schema has 11 tables. The following tables and columns are missing and must be created before the corresponding APIs can function.</p>
+
+  <div class="gap-box">
+    <h4>Critical Gaps (APIs blocked without these)</h4>
+    <ul>
+      <li><strong>conversations</strong> table &mdash; Blocks: Messaging API (11). Fields: id, type (direct/group), group_name, created_by, school_id, created_at</li>
+      <li><strong>conversation_members</strong> table &mdash; Blocks: Messaging API (11). Fields: id, conversation_id, user_id, last_read_at, created_at</li>
+      <li><strong>guardian_students</strong> table &mdash; Blocks: Guardian-Children API (19). Fields: id, guardian_id (FK users), student_id (FK students), relationship, created_at</li>
+      <li><strong>attendance_records</strong> table &mdash; Blocks: Attendance API (9). Fields: id, student_id, class_id, date, status (present/absent/late), recorded_by, created_at</li>
+      <li><strong>transactions</strong> table &mdash; Blocks: Finance API (10). Fields: id, school_id, type (income/expense), category, description, amount, status, date, created_by, created_at</li>
+      <li><strong>communities</strong> table &mdash; Blocks: Communities API (13). Fields: id, school_id, name, subject, created_by, created_at</li>
+      <li><strong>community_members</strong> table &mdash; Blocks: Communities API (13). Fields: id, community_id, user_id, last_read_at, created_at</li>
+      <li><strong>community_messages</strong> table &mdash; Blocks: Communities API (13). Fields: id, community_id, sender_id, message_text, created_at</li>
+    </ul>
+  </div>
+
+  <div class="gap-box">
+    <h4>High Priority Gaps (Features partially blocked)</h4>
+    <ul>
+      <li><strong>student_progress</strong> table alterations &mdash; Blocks: Assignment submission flow. Add columns: status (pending/submitted/graded), submission_url, graded_at</li>
+      <li><strong>users</strong> table alterations &mdash; Blocks: Online status in chat. Add columns: last_seen (timestamptz), is_online (boolean)</li>
+      <li><strong>whiteboard_sessions</strong> table &mdash; Blocks: Whiteboard API (12). Fields: id, school_id, class_id, teacher_id, title, session_link, participant_count, scheduled_at, created_at</li>
+      <li><strong>subscriptions</strong> table &mdash; Blocks: Subscription API (18). Fields: id, guardian_id, plan_type, status, start_date, end_date, payment_method, created_at</li>
+      <li><strong>subscription_payments</strong> table &mdash; Blocks: Payment tracking. Fields: id, subscription_id, amount, payment_method, transaction_ref, status, paid_at</li>
+    </ul>
+  </div>
+
+  <div class="gap-box">
+    <h4>Medium Priority Gaps (Features work with reduced functionality)</h4>
+    <ul>
+      <li><strong>course_downloads</strong> table &mdash; Blocks: Download count tracking. Fields: id, course_id, user_id, downloaded_at</li>
+      <li><strong>ai_conversations</strong> table &mdash; Blocks: AI Tutor history. Fields: id, user_id, subject, question, answer, created_at</li>
+      <li><strong>lifelong_courses</strong> table &mdash; Blocks: Lifelong Learning API (16). Fields: id, title, description, category, level, duration, module_count</li>
+      <li><strong>lifelong_modules</strong> table &mdash; Blocks: Module tracking. Fields: id, course_id, title, duration, order_index</li>
+      <li><strong>lifelong_enrollments</strong> table &mdash; Blocks: Enrollment tracking. Fields: id, user_id, course_id, enrolled_at</li>
+      <li><strong>lifelong_module_progress</strong> table &mdash; Blocks: Module completion. Fields: id, enrollment_id, module_id, completed_at</li>
+      <li><strong>student_subject_progress</strong> table &mdash; Blocks: Subject progress tracking. Fields: id, student_id, subject, class_id, progress_percentage, updated_at</li>
+      <li><strong>topics</strong> table &mdash; Blocks: Topic-level tracking. Fields: id, subject, class_id, title, order_index</li>
+      <li><strong>topic_progress</strong> table &mdash; Blocks: Topic completion. Fields: id, student_id, topic_id, completed, completed_at</li>
+    </ul>
+  </div>
+
+  <div class="info-box">
+    <h4>Existing Tables (No Migration Needed)</h4>
+    <p>users, schools, classes, students, teachers, teacher_class_assignments, courses, assessments, student_progress, notifications, messages, accessibility_preferences</p>
+  </div>
+</div>
+
+<!-- R5: Data Validation & Business Logic -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">R5</div>
+    <div class="section-title">Data Validation &amp; Business Logic Rules</div>
+  </div>
+  <p class="section-desc">These rules must be enforced at the API layer (Edge Functions) and reinforced at the database layer (constraints, triggers).</p>
+  <table>
+    <thead><tr><th>Rule ID</th><th>Domain</th><th>Rule</th><th>Enforcement</th></tr></thead>
+    <tbody>
+      <tr><td>V1</td><td>Auth</td><td>Password minimum 8 characters, must contain uppercase, lowercase, and number</td><td>API layer</td></tr>
+      <tr><td>V2</td><td>Auth</td><td>Email must be unique across all users table</td><td>DB constraint (existing)</td></tr>
+      <tr><td>V3</td><td>Auth</td><td>Failed login rate limit: max 5 attempts per 15 min per email</td><td>API layer</td></tr>
+      <tr><td>V4</td><td>Students</td><td>student_id (regNo) must be unique per school, auto-generated from school prefix</td><td>API layer + DB constraint</td></tr>
+      <tr><td>V5</td><td>Students</td><td>Cannot enroll student in a class that belongs to a different school</td><td>API layer + DB FK</td></tr>
+      <tr><td>V6</td><td>Classes</td><td>Cannot delete class with active students (count > 0)</td><td>API layer</td></tr>
+      <tr><td>V7</td><td>Assignments</td><td>due_date must be in the future when creating an assignment</td><td>API layer</td></tr>
+      <tr><td>V8</td><td>Assignments</td><td>score_obtained must be between 0 and max_points</td><td>API layer + DB CHECK</td></tr>
+      <tr><td>V9</td><td>Assignments</td><td>Cannot delete assignment with existing submissions</td><td>API layer</td></tr>
+      <tr><td>V10</td><td>Assignments</td><td>Student can only submit once per assignment (no duplicate submissions)</td><td>DB UNIQUE constraint</td></tr>
+      <tr><td>V11</td><td>Materials</td><td>File types allowed: PDF, PPT, PPTX, MP4, WEBM. Max size: 100MB</td><td>API layer</td></tr>
+      <tr><td>V12</td><td>Materials</td><td>Only approved materials visible to students (verification_status = 'approved')</td><td>RLS policy</td></tr>
+      <tr><td>V13</td><td>Attendance</td><td>One record per student per class per date (no duplicates)</td><td>DB UNIQUE constraint</td></tr>
+      <tr><td>V14</td><td>Attendance</td><td>Only teachers assigned to a class can record attendance for that class</td><td>API layer + RLS</td></tr>
+      <tr><td>V15</td><td>Finance</td><td>Amount must be positive (> 0)</td><td>DB CHECK constraint</td></tr>
+      <tr><td>V16</td><td>Finance</td><td>Paid/collected transactions are immutable (cannot update amount or status)</td><td>API layer</td></tr>
+      <tr><td>V17</td><td>Messaging</td><td>Users can only send messages in conversations they are members of</td><td>RLS policy</td></tr>
+      <tr><td>V18</td><td>Communities</td><td>Only creator can dissolve a community</td><td>API layer + RLS</td></tr>
+      <tr><td>V19</td><td>Guardian</td><td>Linking a child requires valid student regNo that exists in the system</td><td>API layer</td></tr>
+      <tr><td>V20</td><td>Guardian</td><td>Guardian can link max children based on subscription plan (Basic: 1, Premium: 3, Enterprise: unlimited)</td><td>API layer</td></tr>
+      <tr><td>V21</td><td>AI Tutor</td><td>Rate limit: max 20 questions per student per day</td><td>API layer</td></tr>
+      <tr><td>V22</td><td>Institutions</td><td>school_reg_number must be unique globally</td><td>DB constraint (existing)</td></tr>
+      <tr><td>V23</td><td>Institutions</td><td>Status transitions must follow: trial &rarr; active &rarr; suspended &rarr; expired (no skipping)</td><td>API layer</td></tr>
+      <tr><td>V24</td><td>Subscriptions</td><td>Cannot downgrade to a plan with fewer children than currently linked</td><td>API layer</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- R6: Real-Time & Performance -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">R6</div>
+    <div class="section-title">Real-Time &amp; Performance Rules</div>
+  </div>
+  <p class="section-desc">Rules for real-time features, caching, pagination, and query optimization.</p>
+  <table>
+    <thead><tr><th>Rule ID</th><th>Category</th><th>Rule</th><th>Implementation</th></tr></thead>
+    <tbody>
+      <tr><td>P1</td><td>Real-time</td><td>Chat messages delivered via Supabase Realtime (Postgres Changes on messages table)</td><td>Supabase Realtime</td></tr>
+      <tr><td>P2</td><td>Real-time</td><td>Notifications delivered via Supabase Realtime (Postgres Changes on notifications table)</td><td>Supabase Realtime</td></tr>
+      <tr><td>P3</td><td>Real-time</td><td>Online status updated via presence channel (heartbeat every 30s, offline after 90s)</td><td>Supabase Presence</td></tr>
+      <tr><td>P4</td><td>Pagination</td><td>All list endpoints must support cursor-based pagination (limit + cursor)</td><td>API parameter</td></tr>
+      <tr><td>P5</td><td>Pagination</td><td>Default page size: 20 items. Max page size: 100 items.</td><td>API parameter</td></tr>
+      <tr><td>P6</td><td>Caching</td><td>Platform analytics (API 20) cached for 5 minutes</td><td>Edge Function cache</td></tr>
+      <tr><td>P7</td><td>Caching</td><td>Institution stats (API 2.6) cached for 2 minutes</td><td>Edge Function cache</td></tr>
+      <tr><td>P8</td><td>Caching</td><td>Subscription plans (API 18.1) cached for 1 hour (rarely changes)</td><td>Edge Function cache</td></tr>
+      <tr><td>P9</td><td>Performance</td><td>Add indexes on: messages(conversation_id, created_at), notifications(user_id, is_read), student_progress(student_id, assessment_id)</td><td>DB migration</td></tr>
+      <tr><td>P10</td><td>Performance</td><td>Unread count endpoints (11.1, 17.5) must use indexed queries, response time &lt; 50ms</td><td>DB index + API</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- R7: Security & RLS -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">R7</div>
+    <div class="section-title">Security &amp; RLS Policy Rules</div>
+  </div>
+  <p class="section-desc">Row Level Security policies for every table. Every policy must use auth.uid() and check ownership or membership.</p>
+  <table>
+    <thead><tr><th>Table</th><th>SELECT Policy</th><th>INSERT Policy</th><th>UPDATE Policy</th><th>DELETE Policy</th></tr></thead>
+    <tbody>
+      <tr><td>users</td><td>Own profile OR school_admin same school OR super_admin</td><td>super_admin only</td><td>Own profile (limited fields) OR super_admin</td><td>super_admin only (soft delete via is_active)</td></tr>
+      <tr><td>schools</td><td>super_admin all; school_admin own school</td><td>super_admin only</td><td>super_admin all; school_admin own school (limited)</td><td>super_admin only</td></tr>
+      <tr><td>classes</td><td>Members of school OR super_admin</td><td>school_admin same school</td><td>school_admin same school</td><td>school_admin same school</td></tr>
+      <tr><td>students</td><td>Own record OR teacher in same class OR school_admin same school OR guardian linked</td><td>school_admin same school</td><td>school_admin same school</td><td>school_admin (soft delete)</td></tr>
+      <tr><td>teachers</td><td>Own record OR school_admin same school</td><td>school_admin same school</td><td>Own record (limited) OR school_admin same school</td><td>school_admin (soft delete)</td></tr>
+      <tr><td>assessments</td><td>Teacher (own) OR student (in class) OR school_admin same school</td><td>Teacher (assigned to class)</td><td>Teacher (own) only</td><td>Teacher (own) only</td></tr>
+      <tr><td>student_progress</td><td>Own record OR teacher (class) OR guardian (linked) OR school_admin</td><td>Student (own, submit) OR teacher (grade)</td><td>Teacher (grade) only</td><td>Not allowed</td></tr>
+      <tr><td>courses</td><td>Approved = public; Pending = teacher own OR school_admin</td><td>Teacher same school</td><td>Teacher own OR school_admin (status only)</td><td>Teacher own OR school_admin</td></tr>
+      <tr><td>notifications</td><td>Own only (auth.uid() = user_id)</td><td>System or admin</td><td>Own only (mark read)</td><td>Not allowed</td></tr>
+      <tr><td>messages</td><td>Sender or recipient in conversation</td><td>Conversation member only</td><td>Own messages only (mark read)</td><td>Not allowed</td></tr>
+      <tr><td>conversations</td><td>Member only</td><td>Any authenticated user</td><td>Creator only (group name)</td><td>Creator only</td></tr>
+      <tr><td>communities</td><td>Same school members</td><td>Same school users</td><td>Creator only</td><td>Creator only</td></tr>
+      <tr><td>attendance_records</td><td>Own OR teacher (class) OR school_admin OR guardian (linked)</td><td>Teacher (assigned to class)</td><td>Teacher (own records today)</td><td>Not allowed</td></tr>
+      <tr><td>transactions</td><td>school_admin same school OR super_admin</td><td>school_admin same school</td><td>school_admin same school (pending only)</td><td>Not allowed</td></tr>
+      <tr><td>accessibility_preferences</td><td>Own only</td><td>Own only</td><td>Own only</td><td>Not allowed</td></tr>
+      <tr><td>guardian_students</td><td>Guardian (own links) OR school_admin</td><td>Guardian (own) after regNo validation</td><td>Not allowed</td><td>Guardian (own links)</td></tr>
+      <tr><td>subscriptions</td><td>Own OR super_admin</td><td>Guardian (own)</td><td>System only (auto-renew)</td><td>Not allowed</td></tr>
+    </tbody>
+  </table>
+  <div class="rule-box">
+    <h4>&#9888; Critical RLS Rules</h4>
+    <ul>
+      <li>NEVER use <code>USING (true)</code> in any policy &mdash; this defeats RLS entirely</li>
+      <li>Every table MUST have RLS enabled: <code>ALTER TABLE x ENABLE ROW LEVEL SECURITY;</code></li>
+      <li>Default state after enabling RLS: NO access. Policies must explicitly grant access.</li>
+      <li>Always use <code>auth.uid()</code> not <code>current_user</code> for user identification</li>
+      <li>SELECT policies use USING; INSERT use WITH CHECK; UPDATE use both; DELETE use USING</li>
+      <li>Do NOT use <code>FOR ALL</code> &mdash; separate into individual SELECT/INSERT/UPDATE/DELETE policies</li>
+    </ul>
+  </div>
+</div>
+
+<!-- R8: File Handling -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">R8</div>
+    <div class="section-title">File Handling &amp; Storage Rules</div>
+  </div>
+  <p class="section-desc">Rules for file uploads, downloads, storage buckets, and URL generation.</p>
+  <table>
+    <thead><tr><th>Rule ID</th><th>Category</th><th>Rule</th></tr></thead>
+    <tbody>
+      <tr><td>F1</td><td>Storage Bucket</td><td>Create Supabase Storage bucket: <code>study-materials</code> for course materials, <code>submissions</code> for assignment files, <code>sign-language-videos</code> for UGSL content</td></tr>
+      <tr><td>F2</td><td>Upload Path</td><td>Files stored at: <code>{bucket}/{school_id}/{class_id}/{filename}_{timestamp.ext}</code></td></tr>
+      <tr><td>F3</td><td>File Size</td><td>Max file size: 100MB for study materials, 50MB for assignment submissions, 500MB for video content</td></tr>
+      <tr><td>F4</td><td>Allowed Types</td><td>Study materials: PDF, PPT, PPTX, MP4, WEBM. Submissions: PDF, DOC, DOCX, JPG, PNG, ZIP</td></tr>
+      <tr><td>F5</td><td>Download URLs</td><td>Use Supabase Storage signed URLs with 1-hour expiry for downloads. Never expose direct URLs.</td></tr>
+      <tr><td>F6</td><td>Access Control</td><td>Storage RLS: teachers can upload to their school bucket; students can only read approved materials; admins can read/write all</td></tr>
+      <tr><td>F7</td><td>Virus Scan</td><td>All uploaded files must be scanned before making available. Pending materials are quarantined until admin approval.</td></tr>
+      <tr><td>F8</td><td>Image Thumbnails</td><td>Auto-generate thumbnails for image uploads (max 200x200) for preview display</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SUMMARY -->
+<div class="section" style="page-break-before: always;">
+  <div class="section-header">
+    <div class="section-num" style="background:#10b981;">&Sigma;</div>
+    <div class="section-title">Summary</div>
+  </div>
+
+  <div class="info-box">
+    <h3 style="font-size: 12pt;">Total Endpoints: 75 across 20 API Groups</h3>
+    <p>5 user roles &middot; 5 education levels &middot; 24 validation rules &middot; 10 performance rules &middot; 8 file handling rules &middot; 5 cross-role workflows</p>
+  </div>
+
+  <table>
+    <thead><tr><th>API Group</th><th style="width:50px">Count</th><th>Primary Consumers</th><th>Schema Status</th></tr></thead>
+    <tbody>
+      <tr><td>1. Auth &amp; Users</td><td>7</td><td>All roles</td><td style="color:#047857">Tables exist</td></tr>
+      <tr><td>2. Institutions</td><td>6</td><td>Super Admin, School Admin</td><td style="color:#047857">Table exists</td></tr>
+      <tr><td>3. Classes</td><td>7</td><td>School Admin, Teacher</td><td style="color:#047857">Table exists</td></tr>
+      <tr><td>4. Students</td><td>6</td><td>School Admin, Guardian</td><td style="color:#047857">Table exists</td></tr>
+      <tr><td>5. Staff</td><td>5</td><td>School Admin</td><td style="color:#047857">Table exists</td></tr>
+      <tr><td>6. Subjects</td><td>5</td><td>Teacher, Student</td><td style="color:#f59e0b">Partial (need progress tables)</td></tr>
+      <tr><td>7. Assignments</td><td>8</td><td>Teacher, Student</td><td style="color:#f59e0b">Partial (need status column)</td></tr>
+      <tr><td>8. Study Materials</td><td>6</td><td>Teacher, Student, Admin</td><td style="color:#f59e0b">Partial (need downloads table)</td></tr>
+      <tr><td>9. Attendance</td><td>5</td><td>Teacher, School Admin</td><td style="color:#dc2626">Missing table</td></tr>
+      <tr><td>10. Finance</td><td>5</td><td>School Admin</td><td style="color:#dc2626">Missing table</td></tr>
+      <tr><td>11. Messaging</td><td>6</td><td>All roles</td><td style="color:#dc2626">Missing conversations table</td></tr>
+      <tr><td>12. Whiteboard</td><td>5</td><td>Teacher, Student</td><td style="color:#dc2626">Missing table</td></tr>
+      <tr><td>13. Communities</td><td>6</td><td>Student, Teacher</td><td style="color:#dc2626">Missing tables</td></tr>
+      <tr><td>14. AI Tutor</td><td>4</td><td>Student</td><td style="color:#dc2626">Missing table</td></tr>
+      <tr><td>15. Accessibility</td><td>5</td><td>Student</td><td style="color:#047857">Table exists</td></tr>
+      <tr><td>16. Lifelong Learning</td><td>6</td><td>Student</td><td style="color:#dc2626">Missing tables</td></tr>
+      <tr><td>17. Notifications</td><td>5</td><td>All roles</td><td style="color:#047857">Table exists</td></tr>
+      <tr><td>18. Subscriptions</td><td>4</td><td>Guardian</td><td style="color:#dc2626">Missing tables</td></tr>
+      <tr><td>19. Guardian-Children</td><td>4</td><td>Guardian</td><td style="color:#dc2626">Missing table</td></tr>
+      <tr><td>20. Platform Analytics</td><td>4</td><td>Super Admin</td><td style="color:#f59e0b">Depends on other tables</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div class="gap-box">
+      <h4>Implementation Priority Order</h4>
+      <ol style="padding-left:18px; font-size:9pt; color:#7f1d1d;">
+        <li>Auth &amp; Users (foundation for everything)</li>
+        <li>Institutions + Classes + Students + Staff (core data)</li>
+        <li>Assignments + Submissions (core workflow)</li>
+        <li>Messaging (conversations table first)</li>
+        <li>Attendance + Finance (admin features)</li>
+        <li>Guardian linking + Subscriptions</li>
+        <li>Communities + Whiteboard + AI Tutor</li>
+        <li>Lifelong Learning + Analytics</li>
+      </ol>
+    </div>
+    <div class="info-box">
+      <h4>Migration Count Needed</h4>
+      <p><strong>8 new tables</strong> to create<br>
+      <strong>2 existing tables</strong> to alter (add columns)<br>
+      <strong>3 storage buckets</strong> to create<br>
+      <strong>~30 RLS policies</strong> to write<br>
+      <strong>~15 indexes</strong> to add for performance</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    EduPlatform API Specification &amp; Implementation Rules v1.0.0 &mdash; April 29, 2026 &mdash; Confidential
+  </div>
+</div>
+
+</body>
+</html>
