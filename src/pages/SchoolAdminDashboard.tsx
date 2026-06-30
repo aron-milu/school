@@ -6,9 +6,11 @@ import {
   Eye, MoreVertical, Phone, Mail,
   Calendar, BarChart3, CreditCard, CheckCircle2
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getDashboardTab, getDashboardTabPath } from '../lib/dashboardRoutes';
 
 type Tab = 'overview' | 'classes' | 'students' | 'teachers' | 'fees';
+const TAB_IDS: readonly Tab[] = ['overview', 'classes', 'students', 'teachers', 'fees'];
 
 const CLASSES = [
   { id: 1, name: 'Senior 1 Blue', level: 'S1', stream: 'Blue', students: 45, teacher: 'Mr. Okello James', subjects: 10 },
@@ -47,7 +49,8 @@ const TEACHERS = [
 export default function SchoolAdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<Tab>(() => getDashboardTab(window.location.pathname, TAB_IDS, 'overview'));
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState<'class' | 'student' | 'teacher' | null>(null);
 
@@ -56,19 +59,28 @@ export default function SchoolAdminDashboard() {
     navigate('/login');
   };
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'overview', label: 'Overview', icon: <BarChart3 size={18} /> },
-    { id: 'classes', label: 'Classes', icon: <GraduationCap size={18} /> },
-    { id: 'students', label: 'Students', icon: <Users size={18} /> },
-    { id: 'teachers', label: 'Teachers', icon: <UserCheck size={18} /> },
-    { id: 'fees', label: 'School Fees', icon: <CreditCard size={18} /> },
-  ];
+  useEffect(() => {
+    const tab = getDashboardTab(location.pathname, TAB_IDS, 'overview');
+    setActiveTab(tab);
+
+    const legacyHashTab = location.hash.replace('#', '') as Tab;
+    if (TAB_IDS.includes(legacyHashTab)) {
+      navigate(getDashboardTabPath('/school-admin', legacyHashTab), { replace: true });
+    } else if (location.pathname === '/school-admin' || location.pathname === '/school-admin/') {
+      navigate(getDashboardTabPath('/school-admin', tab), { replace: true });
+    }
+  }, [location.pathname, location.hash, navigate]);
+
+  const navigateToTab = (tab: Tab) => {
+    setActiveTab(tab);
+    navigate(getDashboardTabPath('/school-admin', tab));
+  };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center">
               <BookOpen className="text-white" size={20} />
@@ -94,36 +106,16 @@ export default function SchoolAdminDashboard() {
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex gap-1">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-brand text-brand'
-                    : 'border-transparent text-slate-400 hover:text-slate-700 hover:border-slate-300'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+      {/* Navigation moved to sidebar; route paths control active page. */}
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {activeTab === 'overview' && <OverviewTab onNavigate={setActiveTab} onAdd={setShowAddModal} />}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
+        {activeTab === 'overview' && <OverviewTab onNavigate={navigateToTab} onAdd={setShowAddModal} />}
         {activeTab === 'classes' && <ClassesTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} onAdd={() => setShowAddModal('class')} />}
         {activeTab === 'students' && <StudentsTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} onAdd={() => setShowAddModal('student')} />}
         {activeTab === 'teachers' && <TeachersTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} onAdd={() => setShowAddModal('teacher')} />}
         {activeTab === 'fees' && <FeesTab />}
-      </main>
+      </div>
 
       {/* Add Modal */}
       {showAddModal && (

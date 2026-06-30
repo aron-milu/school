@@ -6,9 +6,11 @@ import {
   CreditCard, Calendar, FileText,
   UserPlus, Star, MessageSquare, Download, Send, X
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getDashboardTab, getDashboardTabPath } from '../lib/dashboardRoutes';
 
 type Tab = 'overview' | 'children' | 'performance' | 'subscription' | 'fees' | 'reports' | 'communication';
+const TAB_IDS: readonly Tab[] = ['overview', 'children', 'performance', 'subscription', 'fees', 'reports', 'communication'];
 
 const CHILDREN = [
   {
@@ -72,7 +74,8 @@ const SUBSCRIPTION_PLANS = [
 export default function GuardianDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<Tab>(() => getDashboardTab(window.location.pathname, TAB_IDS, 'overview'));
   const [selectedChild, setSelectedChild] = useState(CHILDREN[0].id);
 
   const handleLogout = async () => {
@@ -80,23 +83,30 @@ export default function GuardianDashboard() {
     navigate('/login');
   };
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'overview', label: 'Overview', icon: <BarChart3 size={18} /> },
-    { id: 'children', label: 'My Children', icon: <Users size={18} /> },
-    { id: 'performance', label: 'Performance', icon: <TrendingUp size={18} /> },
-    { id: 'fees', label: 'School Fees', icon: <CreditCard size={18} /> },
-    { id: 'reports', label: 'Academic Reports', icon: <FileText size={18} /> },
-    { id: 'communication', label: 'Communication', icon: <MessageSquare size={18} /> },
-    { id: 'subscription', label: 'Subscription', icon: <CreditCard size={18} /> },
-  ];
+  useEffect(() => {
+    const tab = getDashboardTab(location.pathname, TAB_IDS, 'overview');
+    setActiveTab(tab);
+
+    const legacyHashTab = location.hash.replace('#', '') as Tab;
+    if (TAB_IDS.includes(legacyHashTab)) {
+      navigate(getDashboardTabPath('/guardian', legacyHashTab), { replace: true });
+    } else if (location.pathname === '/guardian' || location.pathname === '/guardian/') {
+      navigate(getDashboardTabPath('/guardian', tab), { replace: true });
+    }
+  }, [location.pathname, location.hash, navigate]);
+
+  const navigateToTab = (tab: Tab) => {
+    setActiveTab(tab);
+    navigate(getDashboardTabPath('/guardian', tab));
+  };
 
   const currentChild = CHILDREN.find(c => c.id === selectedChild) || CHILDREN[0];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center">
               <BookOpen className="text-white" size={20} />
@@ -122,38 +132,18 @@ export default function GuardianDashboard() {
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex gap-1">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-brand text-brand'
-                    : 'border-transparent text-slate-400 hover:text-slate-700 hover:border-slate-300'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+      {/* Navigation moved to sidebar; route paths control active page. */}
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {activeTab === 'overview' && <OverviewTab selectedChild={selectedChild} setSelectedChild={setSelectedChild} onNavigate={setActiveTab} />}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
+        {activeTab === 'overview' && <OverviewTab selectedChild={selectedChild} setSelectedChild={setSelectedChild} onNavigate={navigateToTab} />}
         {activeTab === 'children' && <ChildrenTab selectedChild={selectedChild} setSelectedChild={setSelectedChild} />}
         {activeTab === 'performance' && <PerformanceTab child={currentChild} />}
         {activeTab === 'fees' && <FeesTab />}
         {activeTab === 'reports' && <ReportsTab />}
         {activeTab === 'communication' && <CommunicationTab />}
         {activeTab === 'subscription' && <SubscriptionTab />}
-      </main>
+      </div>
     </div>
   );
 }

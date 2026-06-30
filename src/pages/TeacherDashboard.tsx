@@ -1,17 +1,20 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { StorageBucket } from '../types';
 import {
   LogOut, BookOpen, Users, Plus, Search, X,
   FileText, Bell, Send, Clock, CheckCircle2,
-  MessageSquare, BarChart3, GraduationCap,
+  BarChart3, GraduationCap,
   Calendar, ChevronRight, Target, AlertTriangle,
   TrendingUp, TrendingDown, Shield, Wrench,
-  Headphones, Sparkles, PenTool, Video, Loader2, Download
+  PenTool, Video, Loader2, Download
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getDashboardTab, getDashboardTabPath } from '../lib/dashboardRoutes';
 
 type Tab = 'overview' | 'students' | 'diagnostics' | 'assignments' | 'create' | 'materials' | 'speak-tutor' | 'assisted-learning' | 'lifelong-learning' | 'whiteboard' | 'chat';
+const TAB_IDS: readonly Tab[] = ['overview', 'students', 'diagnostics', 'assignments', 'create', 'materials', 'speak-tutor', 'assisted-learning', 'lifelong-learning', 'whiteboard', 'chat'];
 
 const MY_CLASSES = [
   { id: 1, name: 'Senior 4 Blue', level: 'S4', stream: 'Blue', students: 38, subject: 'Mathematics' },
@@ -57,7 +60,8 @@ const CHAT_CONTACTS = [
 export default function TeacherDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<Tab>(() => getDashboardTab(window.location.pathname, TAB_IDS, 'overview'));
   const [searchQuery, setSearchQuery] = useState('');
   const [chatInput, setChatInput] = useState('');
   const [selectedChat, setSelectedChat] = useState(1);
@@ -68,25 +72,23 @@ export default function TeacherDashboard() {
     navigate('/login');
   };
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'overview', label: 'Overview', icon: <BarChart3 size={18} /> },
-    { id: 'students', label: 'My Students', icon: <Users size={18} /> },
-    { id: 'diagnostics', label: 'Diagnostics', icon: <Target size={18} /> },
-    { id: 'assignments', label: 'Assignments', icon: <FileText size={18} /> },
-    { id: 'create', label: 'Create', icon: <Plus size={18} /> },
-    { id: 'materials', label: 'Study Materials', icon: <FileText size={18} /> },
-    { id: 'speak-tutor', label: 'Call Log', icon: <Headphones size={18} /> },
-    { id: 'assisted-learning', label: 'Assisted Learning', icon: <Sparkles size={18} /> },
-    { id: 'lifelong-learning', label: 'Lifelong Learning', icon: <GraduationCap size={18} /> },
-    { id: 'whiteboard', label: 'Whiteboard', icon: <PenTool size={18} /> },
-    { id: 'chat', label: 'Chat', icon: <MessageSquare size={18} /> },
-  ];
+  useEffect(() => {
+    const tab = getDashboardTab(location.pathname, TAB_IDS, 'overview');
+    setActiveTab(tab);
+
+    const legacyHashTab = location.hash.replace('#', '') as Tab;
+    if (TAB_IDS.includes(legacyHashTab)) {
+      navigate(getDashboardTabPath('/teacher', legacyHashTab), { replace: true });
+    } else if (location.pathname === '/teacher' || location.pathname === '/teacher/') {
+      navigate(getDashboardTabPath('/teacher', tab), { replace: true });
+    }
+  }, [location.pathname, location.hash, navigate]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center">
               <BookOpen className="text-white" size={20} />
@@ -112,30 +114,12 @@ export default function TeacherDashboard() {
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      <nav className="bg-white border-b border-slate-200 overflow-x-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex gap-1">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-brand text-brand'
-                    : 'border-transparent text-slate-400 hover:text-slate-700 hover:border-slate-300'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+      {/* Navigation moved to sidebar; route paths control active page. */}
+
+      {/* Syncing handled in effect above */}
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
         {activeTab === 'overview' && <OverviewTab />}
         {activeTab === 'students' && (
           <StudentsTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -158,7 +142,7 @@ export default function TeacherDashboard() {
             setShowContacts={setShowContacts}
           />
         )}
-      </main>
+      </div>
     </div>
   );
 }
@@ -1156,6 +1140,12 @@ function TeacherMaterialsTab() {
     setUploadError('');
 
     try {
+      if (!supabase) {
+        setUploadError('Upload is unavailable in demo mode.');
+        setUploading(false);
+        return;
+      }
+
       const userId = user?.id || 'unknown';
       const timestamp = Date.now();
       const sanitizedName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -1171,7 +1161,7 @@ function TeacherMaterialsTab() {
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('study-materials')
+        .from(StorageBucket.STUDY_MATERIALS)
         .upload(filePath, selectedFile, {
           cacheControl: '3600',
           upsert: false,
@@ -1185,7 +1175,7 @@ function TeacherMaterialsTab() {
 
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from('study-materials')
+        .from(StorageBucket.STUDY_MATERIALS)
         .getPublicUrl(filePath);
 
       const fileUrl = urlData?.publicUrl || '';
@@ -1254,6 +1244,11 @@ function TeacherMaterialsTab() {
 
   const handleDelete = async (id: string, fileUrl: string) => {
     try {
+      if (!supabase) {
+        setMaterials(prev => prev.filter(m => m.id !== id));
+        return;
+      }
+
       // Extract file path from URL
       if (fileUrl) {
         const urlParts = fileUrl.split('/study-materials/');

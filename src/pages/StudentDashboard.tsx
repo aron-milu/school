@@ -1,16 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
-  LogOut, BookOpen, CheckCircle2, Calendar, MessageSquare,
+  LogOut, BookOpen, CheckCircle2, Calendar,
   Users, FileText, Video, Download, Send, Clock, Bell,
   ChevronRight, Search, X, Bot, Sparkles, Loader2, Target,
   TrendingUp, AlertTriangle, Eye, Play, ArrowLeft,
-  Headphones, HandHelping, PenTool, GraduationCap,
+  PenTool,
   Volume2, Mic, Type, Hand
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getDashboardTab, getDashboardTabPath } from '../lib/dashboardRoutes';
 
 type Tab = 'dashboard' | 'courses' | 'assignments' | 'materials' | 'mastery' | 'ai-tutor' | 'speak-tutor' | 'ask-teacher' | 'assisted-learning' | 'lifelong-learning' | 'whiteboard' | 'chat' | 'communities';
+const TAB_IDS: readonly Tab[] = ['dashboard', 'courses', 'assignments', 'materials', 'mastery', 'ai-tutor', 'speak-tutor', 'ask-teacher', 'assisted-learning', 'lifelong-learning', 'whiteboard', 'chat', 'communities'];
 
 const SUBJECTS = [
   { id: 1, title: 'Mathematics', instructor: 'Mr. Okello James', progress: 75, color: 'bg-brand-600', icon: '📐', students: 38 },
@@ -30,7 +32,7 @@ const ASSIGNMENTS = [
   { id: 6, title: 'Colonial Africa Essay', subject: 'History', dueDate: '2026-05-01', type: 'Essay', status: 'pending' as const, points: 25, instructions: 'Discuss the impact of colonialism on East African societies. Cover political, economic, and social effects with specific examples from Uganda, Kenya, and Tanzania.', questions: 1 },
 ];
 
-type StudyMaterial = { id: number; title: string; subject: string; type: string; size: string; downloads: number };
+type StudyMaterial = { id: number; title: string; subject: string; type: string; size: string; downloads: number; fileUrl?: string };
 
 const STUDY_MATERIALS_BY_LEVEL: Record<string, StudyMaterial[]> = {
   secondary: [
@@ -98,13 +100,31 @@ const COMMUNITIES = [
   ]},
 ];
 
-const CHAT_MESSAGES = [
-  { id: 1, sender: 'Okello James', message: 'Remember to review Chapter 5 before tomorrow\'s class', time: '10:30 AM', isMe: false },
-  { id: 2, sender: 'You', message: 'Yes sir, I\'ve been going through the examples', time: '10:32 AM', isMe: true },
-  { id: 3, sender: 'Okello James', message: 'Good. Also check the past paper I uploaded on quadratic equations', time: '10:33 AM', isMe: false },
-  { id: 4, sender: 'You', message: 'I will. Will you be available for extra help during lunch break?', time: '10:35 AM', isMe: true },
-  { id: 5, sender: 'Okello James', message: 'Yes, come to the staff room. Bring your exercise book.', time: '10:36 AM', isMe: false },
-];
+type ChatMessage = { id: number; sender: string; message: string; time: string; isMe: boolean };
+
+const CHAT_MESSAGES_BY_CONTACT: Record<number, ChatMessage[]> = {
+  1: [
+    { id: 1, sender: 'Okello James', message: 'Remember to review Chapter 5 before tomorrow\'s class', time: '10:30 AM', isMe: false },
+    { id: 2, sender: 'You', message: 'Yes sir, I\'ve been going through the examples', time: '10:32 AM', isMe: true },
+    { id: 3, sender: 'Okello James', message: 'Good. Also check the past paper I uploaded on quadratic equations', time: '10:33 AM', isMe: false },
+    { id: 4, sender: 'You', message: 'I will. Will you be available for extra help during lunch break?', time: '10:35 AM', isMe: true },
+    { id: 5, sender: 'Okello James', message: 'Yes, come to the staff room. Bring your exercise book.', time: '10:36 AM', isMe: false },
+  ],
+  2: [
+    { id: 1, sender: 'Nakamya Grace', message: 'The lab report is due next week, right?', time: '9:10 AM', isMe: false },
+    { id: 2, sender: 'You', message: 'Yes, I plan to finish the data section today.', time: '9:12 AM', isMe: true },
+  ],
+  3: [
+    { id: 1, sender: 'Mugisha Peter', message: 'Did you submit the biology essay?', time: '8:40 AM', isMe: false },
+    { id: 2, sender: 'You', message: 'Not yet, I\'m adding the conclusion now.', time: '8:42 AM', isMe: true },
+  ],
+  4: [
+    { id: 1, sender: 'Achieng Ruth', message: 'Bring your safety goggles for tomorrow\'s lab.', time: 'Yesterday', isMe: false },
+  ],
+  5: [
+    { id: 1, sender: 'S4 Blue Class', message: 'Who is joining the revision session?', time: 'Yesterday', isMe: false },
+  ],
+};
 
 const CHAT_CONTACTS = [
   { id: 1, name: 'Mr. Okello James', role: 'Mathematics Teacher', lastMessage: 'Come to the staff room', time: '10:36 AM', unread: 1, online: true },
@@ -117,8 +137,9 @@ const CHAT_CONTACTS = [
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
-  const [selectedChat, setSelectedChat] = useState(1);
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<Tab>(() => getDashboardTab(window.location.pathname, TAB_IDS, 'dashboard'));
+  const [selectedChat, setSelectedChat] = useState(() => CHAT_CONTACTS[0]?.id || 1);
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [assignmentModal, setAssignmentModal] = useState<typeof ASSIGNMENTS[0] | null>(null);
@@ -130,21 +151,22 @@ export default function StudentDashboard() {
 
   const handleLogout = async () => { await logout(); navigate('/login'); };
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'dashboard', label: 'Home', icon: <BarChart3 size={18} /> },
-    { id: 'courses', label: 'My Subjects', icon: <BookOpen size={18} /> },
-    { id: 'assignments', label: 'Assignments', icon: <FileText size={18} /> },
-    { id: 'materials', label: 'Study Materials', icon: <Download size={18} /> },
-    { id: 'mastery', label: 'My Progress', icon: <Target size={18} /> },
-    { id: 'ai-tutor', label: 'AI Tutor', icon: <Bot size={18} /> },
-    { id: 'speak-tutor', label: 'Speak to Tutor', icon: <Headphones size={18} /> },
-    { id: 'ask-teacher', label: 'Ask Teacher', icon: <HandHelping size={18} /> },
-    { id: 'assisted-learning', label: 'Assisted Learning', icon: <Sparkles size={18} /> },
-    { id: 'lifelong-learning', label: 'Lifelong Learning', icon: <GraduationCap size={18} /> },
-    { id: 'whiteboard', label: 'Whiteboard', icon: <PenTool size={18} /> },
-    { id: 'chat', label: 'Messages', icon: <MessageSquare size={18} /> },
-    { id: 'communities', label: 'Communities', icon: <Users size={18} /> },
-  ];
+  useEffect(() => {
+    const tab = getDashboardTab(location.pathname, TAB_IDS, 'dashboard');
+    setActiveTab(tab);
+
+    const legacyHashTab = location.hash.replace('#', '') as Tab;
+    if (TAB_IDS.includes(legacyHashTab)) {
+      navigate(getDashboardTabPath('/student', legacyHashTab), { replace: true });
+    } else if (location.pathname === '/student' || location.pathname === '/student/') {
+      navigate(getDashboardTabPath('/student', tab), { replace: true });
+    }
+  }, [location.pathname, location.hash, navigate]);
+
+  const navigateToTab = (tab: Tab) => {
+    setActiveTab(tab);
+    navigate(getDashboardTabPath('/student', tab));
+  };
 
   const currentMaterials = STUDY_MATERIALS_BY_LEVEL[user?.education_level || 'secondary'] || STUDY_MATERIALS_BY_LEVEL.secondary;
   const filteredMaterials = currentMaterials.filter(m =>
@@ -152,9 +174,55 @@ export default function StudentDashboard() {
     m.subject.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDownload = (title: string) => {
-    setDownloadToast(`Downloading "${title}"...`);
-    setTimeout(() => setDownloadToast(''), 2500);
+  const levelLabels: Record<string, string> = {
+    primary: 'Primary School',
+    secondary: 'Secondary School',
+    university: 'University',
+    tertiary: 'Tertiary College',
+    vocational: 'Vocational',
+  };
+
+  const handleDownload = async (material: StudyMaterial) => {
+    const levelLabel = levelLabels[user?.education_level || 'secondary'] || 'Secondary School';
+    setDownloadToast(`Downloading "${material.title}"...`);
+
+    try {
+      if (material.fileUrl) {
+        const response = await fetch(material.fileUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${material.title.replace(/[^a-z0-9]+/gi, '_').toLowerCase()}.${material.type === 'Video' ? 'mp4' : material.type === 'PDF' ? 'pdf' : 'txt'}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        const extension = material.type === 'Video' ? 'mp4' : material.type === 'PDF' ? 'pdf' : 'txt';
+        const fileName = `${material.title.replace(/[^a-z0-9]+/gi, '_').toLowerCase()}.${extension}`;
+        const content = `Soma365 sample ${material.type} content for "${material.title}"
+
+Subject: ${material.subject}
+Level: ${levelLabel}
+
+This download is a demo file to show how the download feature works.`;
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error('Download failed', err);
+      setDownloadToast(`Failed to download "${material.title}".`);
+    } finally {
+      setTimeout(() => setDownloadToast(''), 2500);
+    }
   };
 
   const handleStartAssignment = (a: typeof ASSIGNMENTS[0]) => {
@@ -170,7 +238,7 @@ export default function StudentDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       {/* Download Toast */}
       {downloadToast && (
         <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium">
@@ -298,8 +366,8 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center"><BookOpen className="text-white" size={20} /></div>
             <div><h1 className="font-bold text-brand text-sm">Soma365</h1><p className="text-[10px] text-slate-500">{({ primary: 'Primary School', secondary: 'Secondary School', university: 'University', tertiary: 'Tertiary College', vocational: 'Vocational Institute' } as Record<string, string>)[user?.education_level || 'secondary'] || 'Secondary School'} - Student</p></div>
@@ -315,21 +383,11 @@ export default function StudentDashboard() {
         </div>
       </header>
 
-      <nav className="bg-white border-b border-slate-200 overflow-x-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex gap-1">
-            {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap ${activeTab === tab.id ? 'border-brand text-brand' : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-300'}`}>
-                {tab.icon}{tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+      {/* Navigation moved to the left sidebar. Route paths update the active page. */}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {activeTab === 'dashboard' && <DashboardTab onViewAssignments={() => setActiveTab('assignments')} onViewAssignment={(a) => setAssignmentModal(a)} />}
-        {activeTab === 'courses' && <CoursesTab onContinue={() => setActiveTab('mastery')} />}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
+        {activeTab === 'dashboard' && <DashboardTab onViewAssignments={() => navigateToTab('assignments')} onViewAssignment={(a) => setAssignmentModal(a)} />}
+        {activeTab === 'courses' && <CoursesTab onContinue={() => navigateToTab('mastery')} />}
         {activeTab === 'assignments' && <AssignmentsTab onViewDetails={setAssignmentModal} onStartAssignment={handleStartAssignment} />}
         {activeTab === 'materials' && <MaterialsTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} filteredMaterials={filteredMaterials} onDownload={handleDownload} level={user?.education_level || 'secondary'} />}
         {activeTab === 'mastery' && <MasteryTab />}
@@ -341,7 +399,7 @@ export default function StudentDashboard() {
         {activeTab === 'whiteboard' && <WhiteboardTab />}
         {activeTab === 'chat' && <ChatTab selectedChat={selectedChat} setSelectedChat={setSelectedChat} />}
         {activeTab === 'communities' && <CommunitiesTab onOpenChat={setCommunityChat} />}
-      </main>
+      </div>
     </div>
   );
 }
@@ -358,49 +416,82 @@ function DashboardTab({ onViewAssignments, onViewAssignment }: { onViewAssignmen
   const { user } = useAuth();
   return (
     <div className="space-y-6">
-      <div className="bg-brand rounded-2xl p-6 text-white">
-        <h2 className="text-2xl font-bold">Good morning, {user?.full_name?.split(' ')[1] || 'Sarah'}!</h2>
-        <p className="text-slate-300 mt-1">You have 3 pending assignments and 2 new messages.</p>
-        <div className="flex gap-3 mt-4">
-          <span className="bg-white/20 px-3 py-1 rounded-full text-sm">S4 Blue</span>
-          <span className="bg-white/20 px-3 py-1 rounded-full text-sm">Lubiri Secondary School</span>
-          <span className="bg-white/20 px-3 py-1 rounded-full text-sm">Term 2, 2026</span>
+      <div className="overflow-hidden rounded-lg border border-brand/20 bg-white shadow-sm">
+        <div className="bg-brand px-6 py-6 text-white sm:px-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/75">Student dashboard</p>
+              <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Good morning, {user?.full_name?.split(' ')[1] || 'Sarah'}</h2>
+              <p className="mt-2 max-w-2xl text-sm text-white/80">You have 3 pending assignments, 2 new messages, and one study group update waiting for review.</p>
+            </div>
+            <button
+              onClick={onViewAssignments}
+              className="inline-flex w-fit items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand shadow-sm transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-white/60"
+            >
+              <FileText size={16} /> Review assignments
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 bg-white px-6 py-3 sm:px-8">
+          <span className="rounded-md bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">S4 Blue</span>
+          <span className="rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Lubiri Secondary School</span>
+          <span className="rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Term 2, 2026</span>
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Average Score', value: '78%', icon: <BarChart3 size={20} />, color: 'bg-brand text-white' },
-          { label: 'Class Rank', value: '5/38', icon: <CheckCircle2 size={20} />, color: 'bg-slate-700 text-white' },
-          { label: 'Attendance', value: '96%', icon: <Calendar size={20} />, color: 'bg-slate-600 text-white' },
-          { label: 'Assignments Done', value: '12/15', icon: <FileText size={20} />, color: 'bg-brand-600 text-white' },
+          { label: 'Average Score', value: '78%', icon: <BarChart3 size={20} />, color: 'bg-brand text-white', action: 'Review scores' },
+          { label: 'Class Rank', value: '5/38', icon: <CheckCircle2 size={20} />, color: 'bg-slate-700 text-white', action: 'See rank' },
+          { label: 'Attendance', value: '96%', icon: <Calendar size={20} />, color: 'bg-slate-600 text-white', action: 'View attendance' },
+          { label: 'Assignments Done', value: '12/15', icon: <FileText size={20} />, color: 'bg-brand-600 text-white', action: 'Open assignments' },
         ].map(stat => (
-          <div key={stat.label} className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between mb-2"><div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.color}`}>{stat.icon}</div></div>
-            <p className="text-2xl font-bold text-brand">{stat.value}</p>
-            <p className="text-sm text-slate-500">{stat.label}</p>
+          <div key={stat.label} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="mb-4 flex items-center justify-between">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.color}`}>{stat.icon}</div>
+              <span className="text-xs font-semibold text-emerald-600">On track</span>
+            </div>
+            <p className="text-2xl font-bold text-slate-950">{stat.value}</p>
+            <p className="mt-1 text-sm font-medium text-slate-500">{stat.label}</p>
+            <button
+              type="button"
+              onClick={onViewAssignments}
+              className="mt-5 inline-flex items-center rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white transition hover:bg-brand-600"
+            >
+              {stat.action}
+            </button>
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-brand">Upcoming Assignments</h3>
-            <button onClick={onViewAssignments} className="text-sm text-brand font-medium hover:underline">View all</button>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-slate-950">Upcoming Assignments</h3>
+              <p className="mt-1 text-sm text-slate-500">Prioritized by nearest due date.</p>
+            </div>
+            <button onClick={onViewAssignments} className="rounded-lg px-3 py-2 text-sm font-semibold text-brand hover:bg-brand-50">View all</button>
           </div>
           <div className="space-y-3">
             {ASSIGNMENTS.filter(a => a.status === 'pending').slice(0, 4).map(a => (
-              <button key={a.id} onClick={() => onViewAssignment(a)} className="w-full text-left flex items-center justify-between p-3 border border-slate-100 rounded-lg hover:bg-slate-50 transition">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center"><FileText size={18} className="text-white" /></div>
-                  <div><p className="font-medium text-brand text-sm">{a.title}</p><p className="text-xs text-slate-500">{a.subject} - {a.type}</p></div>
+              <button key={a.id} onClick={() => onViewAssignment(a)} className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3 text-left transition hover:border-brand/30 hover:bg-brand-50/40">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500"><FileText size={18} className="text-white" /></div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-950">{a.title}</p>
+                    <p className="text-xs text-slate-500">{a.subject} - {a.type}</p>
+                  </div>
                 </div>
-                <div className="text-right"><p className="text-sm font-medium text-brand">{a.dueDate}</p><p className="text-xs text-amber-600">{a.points} pts</p></div>
+                <div className="shrink-0 pl-4 text-right">
+                  <p className="text-sm font-semibold text-slate-900">{a.dueDate}</p>
+                  <p className="text-xs font-medium text-amber-600">{a.points} pts</p>
+                </div>
               </button>
             ))}
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-lg font-bold text-brand mb-4">Recent Activity</h3>
+        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-1 text-lg font-bold text-slate-950">Recent Activity</h3>
+          <p className="mb-5 text-sm text-slate-500">Latest learning actions.</p>
           <div className="space-y-4">
             {[
               { text: 'Submitted Cell Division Essay', time: '2 hrs ago', icon: <CheckCircle2 size={16} className="text-emerald-600" /> },
@@ -409,7 +500,13 @@ function DashboardTab({ onViewAssignments, onViewAssignment }: { onViewAssignmen
               { text: 'Joined UCE Revision Team', time: '2 days ago', icon: <Users size={16} className="text-cyan-600" /> },
               { text: 'Completed English Comprehension', time: '3 days ago', icon: <CheckCircle2 size={16} className="text-emerald-600" /> },
             ].map((item, i) => (
-              <div key={i} className="flex items-start gap-3"><div className="mt-0.5">{item.icon}</div><div><p className="text-sm text-brand">{item.text}</p><p className="text-xs text-slate-400">{item.time}</p></div></div>
+              <div key={i} className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50">{item.icon}</div>
+                <div>
+                  <p className="text-sm font-medium text-slate-800">{item.text}</p>
+                  <p className="text-xs text-slate-400">{item.time}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -421,20 +518,65 @@ function DashboardTab({ onViewAssignments, onViewAssignment }: { onViewAssignmen
 function CoursesTab({ onContinue }: { onContinue: (subject: string) => void }) {
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-brand">My Subjects</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">My Subjects</h2>
+          <p className="mt-2 max-w-xl text-sm text-slate-500">Your current learning focus areas with progress, instructor support, and study actions to stay ahead.</p>
+        </div>
+        <button onClick={() => onContinue('Mathematics')} className="inline-flex items-center justify-center rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600">
+          Continue latest subject
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {SUBJECTS.map(subject => (
-          <div key={subject.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition group">
-            <div className={`${subject.color} p-4 text-white`}>
-              <div className="flex items-center justify-between"><span className="text-2xl">{subject.icon}</span><span className="text-sm font-medium bg-white/20 px-2 py-0.5 rounded-full">{subject.students} students</span></div>
-              <h3 className="text-lg font-bold mt-3">{subject.title}</h3>
-              <p className="text-sm opacity-90">{subject.instructor}</p>
+          <div key={subject.id} className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+            <div className={`${subject.color} px-5 py-5 text-white`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-white/15 text-2xl">{subject.icon}</div>
+                <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">{subject.students} students</span>
+              </div>
+              <div className="mt-5">
+                <h3 className="text-xl font-bold">{subject.title}</h3>
+                <p className="mt-2 text-sm text-white/90">{subject.instructor}</p>
+              </div>
             </div>
-            <div className="p-4">
-              <div className="flex items-center justify-between text-sm mb-2"><span className="text-slate-600">Progress</span><span className="font-semibold text-brand">{subject.progress}%</span></div>
-              <div className="w-full bg-slate-200 rounded-full h-2"><div className={`${subject.color} h-2 rounded-full transition-all`} style={{ width: `${subject.progress}%` }} /></div>
-              <div className="flex items-center gap-2 mt-3 text-sm text-slate-500"><BookOpen size={14} /><span>12 topics</span><span className="text-slate-300">|</span><FileText size={14} /><span>4 assignments</span></div>
-              <button onClick={() => onContinue(subject.title)} className="mt-3 w-full flex items-center justify-center gap-2 text-sm font-medium text-brand hover:bg-slate-50 py-2 rounded-lg transition">Continue <ChevronRight size={16} /></button>
+            <div className="space-y-4 p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Progress</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">{subject.progress}%</p>
+                </div>
+                <div className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">Ongoing</div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm text-slate-500">
+                  <span>Topics covered</span>
+                  <span>12</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-500">
+                  <span>Assignments due</span>
+                  <span>4</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-500">
+                  <span>Mastery</span>
+                  <span>{subject.progress >= 80 ? 'Strong' : subject.progress >= 60 ? 'Improving' : 'Developing'}</span>
+                </div>
+              </div>
+
+              <div className="mt-2 overflow-hidden rounded-full bg-slate-200 h-3">
+                <div className={`${subject.color} h-3 rounded-full`} style={{ width: `${subject.progress}%` }} />
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <button onClick={() => onContinue(subject.title)} className="inline-flex items-center justify-center rounded-xl border border-brand/20 bg-brand/10 px-3 py-2 text-sm font-semibold text-brand transition hover:bg-brand/20">
+                  Continue
+                </button>
+                <button className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                  View lessons
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -460,38 +602,38 @@ function AssignmentsTab({ onViewDetails, onStartAssignment }: { onViewDetails: (
       <div className="space-y-3">
         {filtered.map(a => (
           <div key={a.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${a.status === 'graded' ? 'bg-slate-700' : a.status === 'submitted' ? 'bg-slate-500' : 'bg-brand'}`}>
                   {a.status === 'graded' ? <CheckCircle2 size={22} className="text-white" /> : a.status === 'submitted' ? <Clock size={22} className="text-white" /> : <FileText size={22} className="text-white" />}
                 </div>
-                <div>
-                  <h3 className="font-semibold text-brand">{a.title}</h3>
-                  <p className="text-sm text-slate-500 mt-0.5">{a.subject} - {a.type}</p>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-brand truncate">{a.title}</h3>
+                  <p className="text-sm text-slate-500 mt-0.5 truncate">{a.subject} - {a.type}</p>
+                  <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500">
                     <span className="flex items-center gap-1"><Calendar size={12} /> Due: {a.dueDate}</span>
                     <span className="flex items-center gap-1"><FileText size={12} /> {a.points} pts</span>
                     <span className="flex items-center gap-1"><Eye size={12} /> {a.questions} questions</span>
                   </div>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${a.status === 'graded' ? 'bg-slate-100 text-slate-700' : a.status === 'submitted' ? 'bg-slate-100 text-slate-600' : 'bg-amber-50 text-amber-700'}`}>{a.status}</span>
                 {a.status === 'graded' && a.score !== undefined && <p className="text-sm font-bold text-emerald-600 mt-1">{a.score}/{a.points}</p>}
               </div>
             </div>
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {a.status === 'pending' && (
                 <>
-                  <button onClick={() => onStartAssignment(a)} className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:bg-brand-600 transition flex items-center gap-1.5"><Play size={14} /> Start Assignment</button>
-                  <button onClick={() => onViewDetails(a)} className="px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition flex items-center gap-1.5"><Eye size={14} /> View Instructions</button>
+                  <button onClick={() => onStartAssignment(a)} className="w-full sm:w-auto px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:bg-brand-600 transition flex items-center justify-center gap-1.5"><Play size={14} /> Start Assignment</button>
+                  <button onClick={() => onViewDetails(a)} className="w-full sm:w-auto px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition flex items-center justify-center gap-1.5"><Eye size={14} /> View Instructions</button>
                 </>
               )}
               {a.status === 'submitted' && (
-                <button onClick={() => onViewDetails(a)} className="px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition flex items-center gap-1.5"><Eye size={14} /> View Submission</button>
+                <button onClick={() => onViewDetails(a)} className="w-full sm:w-auto px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition flex items-center justify-center gap-1.5"><Eye size={14} /> View Submission</button>
               )}
               {a.status === 'graded' && (
-                <button onClick={() => onViewDetails(a)} className="px-4 py-2 border border-emerald-200 text-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-50 transition flex items-center gap-1.5"><Eye size={14} /> View Feedback</button>
+                <button onClick={() => onViewDetails(a)} className="w-full sm:w-auto px-4 py-2 border border-emerald-200 text-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-50 transition flex items-center justify-center gap-1.5"><Eye size={14} /> View Feedback</button>
               )}
             </div>
           </div>
@@ -502,7 +644,7 @@ function AssignmentsTab({ onViewDetails, onStartAssignment }: { onViewDetails: (
 }
 
 function MaterialsTab({ searchQuery, setSearchQuery, filteredMaterials, onDownload, level }: {
-  searchQuery: string; setSearchQuery: (q: string) => void; filteredMaterials: StudyMaterial[]; onDownload: (title: string) => void; level: string;
+  searchQuery: string; setSearchQuery: (q: string) => void; filteredMaterials: StudyMaterial[]; onDownload: (material: StudyMaterial) => void; level: string;
 }) {
   const levelLabels: Record<string, string> = { primary: 'Primary School', secondary: 'Secondary School', university: 'University', tertiary: 'Tertiary College', vocational: 'Vocational' };
   return (
@@ -531,7 +673,7 @@ function MaterialsTab({ searchQuery, setSearchQuery, filteredMaterials, onDownlo
                   <span className="flex items-center gap-1"><Download size={10} /> {material.downloads}</span>
                 </div>
               </div>
-              <button onClick={() => onDownload(material.title)} className="p-2 hover:bg-slate-100 rounded-lg transition" title="Download"><Download size={18} className="text-brand" /></button>
+              <button onClick={() => onDownload(material)} className="p-2 hover:bg-slate-100 rounded-lg transition" title="Download"><Download size={18} className="text-brand" /></button>
             </div>
           </div>
         ))}
@@ -544,13 +686,47 @@ function ChatTab({ selectedChat, setSelectedChat }: {
   selectedChat: number; setSelectedChat: (v: number) => void;
 }) {
   const [showContacts, setShowContacts] = useState(true);
-  const [messages, setMessages] = useState(CHAT_MESSAGES);
+  const [conversations, setConversations] = useState<Record<number, ChatMessage[]>>(CHAT_MESSAGES_BY_CONTACT);
   const [input, setInput] = useState('');
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const activeContact = CHAT_CONTACTS.find(contact => contact.id === selectedChat) || CHAT_CONTACTS[0];
+  const messages = conversations[selectedChat] || [];
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [messages, selectedChat]);
 
   const handleSend = () => {
     if (!input.trim()) return;
-    setMessages(prev => [...prev, { id: Date.now(), sender: 'You', message: input, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isMe: true }]);
+
+    const newMessage: ChatMessage = {
+      id: Date.now(),
+      sender: 'You',
+      message: input.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isMe: true,
+    };
+
+    setConversations(prev => ({
+      ...prev,
+      [selectedChat]: [...(prev[selectedChat] || []), newMessage],
+    }));
     setInput('');
+
+    setTimeout(() => {
+      const reply: ChatMessage = {
+        id: Date.now() + 1,
+        sender: activeContact?.name || 'Teacher',
+        message: 'Thanks! I will get back to you shortly.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isMe: false,
+      };
+      setConversations(prev => ({
+        ...prev,
+        [selectedChat]: [...(prev[selectedChat] || []), reply],
+      }));
+    }, 1000);
   };
 
   return (
@@ -573,8 +749,8 @@ function ChatTab({ selectedChat, setSelectedChat }: {
         <div className={`${!showContacts ? 'w-full md:flex-1' : 'hidden md:flex md:flex-1'} flex flex-col`}>
           <div className="p-4 border-b border-slate-200 flex items-center gap-3">
             <button onClick={() => setShowContacts(true)} className="md:hidden p-1 hover:bg-slate-100 rounded"><ChevronRight size={20} className="text-slate-600 rotate-180" /></button>
-            <div className="w-8 h-8 bg-brand rounded-full flex items-center justify-center"><span className="text-white text-xs font-semibold">{CHAT_CONTACTS[selectedChat - 1]?.name[0]}</span></div>
-            <div><p className="font-semibold text-brand text-sm">{CHAT_CONTACTS[selectedChat - 1]?.name}</p><p className="text-[10px] text-slate-500">{CHAT_CONTACTS[selectedChat - 1]?.role}</p></div>
+            <div className="w-8 h-8 bg-brand rounded-full flex items-center justify-center"><span className="text-white text-xs font-semibold">{activeContact?.name[0]}</span></div>
+            <div><p className="font-semibold text-brand text-sm">{activeContact?.name}</p><p className="text-[10px] text-slate-500">{activeContact?.role}</p></div>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map(msg => (
@@ -584,6 +760,7 @@ function ChatTab({ selectedChat, setSelectedChat }: {
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
           <div className="p-4 border-t border-slate-200">
             <div className="flex items-center gap-2">

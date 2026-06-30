@@ -1,11 +1,13 @@
-import React, { createContext, useContext, useState } from 'react';
-import type { User } from '../types';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import type { User, RegisterRequest, AccountType } from '../types';
+import { uploadFileMock } from '../services/onboardingService';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<User>;
+  login: (credential: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
+  register: (request: RegisterRequest) => Promise<User>;
   isAuthenticated: boolean;
 }
 
@@ -233,28 +235,182 @@ const MOCK_CREDENTIALS: Record<string, string> = {
   'voc-instructor@example.com': 'password123',
 };
 
+type InvitationRecord = {
+  institutionId: string;
+  accountType: AccountType;
+  invitedBy: 'INSTITUTION_ADMIN' | 'SCHOOL_ADMIN';
+};
+
+const INVITATION_REPOSITORY: Record<string, InvitationRecord> = {
+  'INST-STUD-001': {
+    institutionId: '550e8400-e29b-41d4-a716-446655440001',
+    accountType: 'INSTITUTION_STUDENT',
+    invitedBy: 'INSTITUTION_ADMIN',
+  },
+  'TEACH-001': {
+    institutionId: '550e8400-e29b-41d4-a716-446655440001',
+    accountType: 'TEACHER',
+    invitedBy: 'INSTITUTION_ADMIN',
+  },
+  'INST-STUD-PRIMARY': {
+    institutionId: '660e8400-e29b-41d4-a716-446655440201',
+    accountType: 'INSTITUTION_STUDENT',
+    invitedBy: 'INSTITUTION_ADMIN',
+  },
+};
+
+const validateInvitation = (code: string, accountType: AccountType, institutionId?: string) => {
+  if (!code) {
+    throw new Error('Invitation code is required.');
+  }
+
+  const invitation = INVITATION_REPOSITORY[code.trim().toUpperCase()];
+  if (!invitation) {
+    throw new Error('Invalid invitation code.');
+  }
+
+  if (invitation.accountType !== accountType) {
+    throw new Error('Invitation code does not match the requested account type.');
+  }
+
+  if (institutionId && invitation.institutionId !== institutionId) {
+    throw new Error('Invitation code does not belong to the selected institution.');
+  }
+
+  return invitation;
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const login = async (email: string, password: string): Promise<User> => {
+  useEffect(() => {
+    const stored = window.localStorage.getItem('soma365-mock-user');
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch {
+        window.localStorage.removeItem('soma365-mock-user');
+      }
+    }
+  }, []);
+
+  const login = async (credential: string, password: string): Promise<User> => {
     setLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (MOCK_CREDENTIALS[email] !== password) {
+      const key = credential.trim();
+      const userKey = MOCK_USERS[key]
+        ? key
+        : Object.keys(MOCK_USERS).find(id => MOCK_USERS[id].phone_number === key);
+
+      if (!userKey || MOCK_CREDENTIALS[userKey] !== password) {
         throw new Error('Invalid credentials. Please try again.');
       }
 
-      const userData = MOCK_USERS[email];
+      const userData = MOCK_USERS[userKey];
       if (!userData) {
         throw new Error('User not found');
       }
 
       setUser(userData);
+      window.localStorage.setItem('soma365-mock-user', JSON.stringify(userData));
       return userData;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
+      throw new Error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (request: RegisterRequest): Promise<User> => {
+    setLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 700));
+
+      if (!request.email && !request.phone) {
+        throw new Error('Provide either email or phone to create your account.');
+      }
+
+      if (request.accountType === 'INSTITUTION_STUDENT') {
+        if (!request.institutionId) {
+          throw new Error('Institution ID is required for institutional students.');
+        }
+        validateInvitation(request.invitationCode ?? '', request.accountType, request.institutionId);
+      }
+
+      if (request.accountType === 'TEACHER') {
+        if (!request.institutionId) {
+          throw new Error('Institution ID is required for teachers.');
+        }
+        validateInvitation(request.invitationCode ?? '', request.accountType, request.institutionId);
+      }
+
+      // Require education level for student accounts
+      if (request.accountType === 'INSTITUTION_STUDENT' || request.accountType === 'INDIVIDUAL_STUDENT') {
+        if (!request.educationLevel) {
+          throw new Error('Education level is required for student accounts.');
+        }
+        if (request.educationLevel === 'primary' || request.educationLevel === 'secondary') {
+          if (!request.classId) {
+            throw new Error('Class selection is required for primary and secondary students.');
+          }
+        }
+      }
+
+      if (request.invitationCode) {
+        validateInvitation(request.invitationCode, request.accountType, request.institutionId);
+      }
+
+      const now = new Date().toISOString();
+      const id = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `user-${Math.random().toString(36).slice(2, 10)}`;
+      const role = request.accountType === 'TEACHER' ? 'teacher' : 'student';
+      const storageKey = request.email ? request.email : request.phone as string;
+
+      const userData: User = {
+        id,
+        email: request.email,
+        phone_number: request.phone,
+        full_name: request.full_name,
+        role,
+        school_id: request.institutionId,
+        education_level: request.educationLevel,
+        class_id: request.classId,
+        is_active: true,
+        must_change_password: false,
+        created_at: now,
+        updated_at: now,
+      };
+
+      MOCK_USERS[storageKey] = userData;
+      MOCK_CREDENTIALS[storageKey] = request.password;
+
+      // If teacher provided KYC files during registration, simulate upload and save mock URLs
+      if (request.accountType === 'TEACHER' && (request as any).kycFiles && Array.isArray((request as any).kycFiles)) {
+        try {
+          const files: File[] = (request as any).kycFiles;
+          const uploaded = [] as Array<{ name: string; path: string; mimeType?: string; size?: number }>;
+          for (const f of files) {
+            const meta = await uploadFileMock(f);
+            uploaded.push({ name: f.name, path: meta.path, mimeType: meta.mimeType, size: meta.size });
+          }
+          // Store teacher docs in localStorage (demo mode)
+          const key = `teacher-docs-${id}`;
+          localStorage.setItem(key, JSON.stringify({ uploaded, created_at: now }));
+        } catch (err) {
+          console.warn('Teacher KYC upload simulation failed', err);
+        }
+      }
+
+      setUser(userData);
+      window.localStorage.setItem('soma365-mock-user', JSON.stringify(userData));
+      return userData;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Register failed';
       throw new Error(message);
     } finally {
       setLoading(false);
@@ -266,13 +422,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await new Promise(resolve => setTimeout(resolve, 300));
       setUser(null);
+      window.localStorage.removeItem('soma365-mock-user');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
@@ -283,5 +440,12 @@ export function useAuth() {
   if (!context) {
     throw new Error('useAuth must be used within AuthProvider');
   }
-  return context;
+  return context as {
+    user: any;
+    loading: boolean;
+    login: (credential: string, password: string) => Promise<any>;
+    logout: () => Promise<void>;
+    register: (req: any) => Promise<any>;
+    isAuthenticated: boolean;
+  };
 }

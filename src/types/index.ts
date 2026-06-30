@@ -2,18 +2,98 @@ export type UserRole = 'super_admin' | 'school_admin' | 'teacher' | 'student' | 
 
 export type EducationLevel = 'primary' | 'secondary' | 'tertiary' | 'university' | 'vocational';
 
+export type AccountType = 'INSTITUTION_STUDENT' | 'INDIVIDUAL_STUDENT' | 'TEACHER';
+
+export interface RegisterRequest {
+  full_name: string;
+  password: string;
+  accountType: AccountType;
+  invitationCode?: string;
+  institutionId?: string;
+  email?: string;
+  phone?: string;
+  educationLevel?: EducationLevel;
+  classId?: string;
+  kycFiles?: File[];
+}
+
+export enum StorageBucket {
+  STUDENT_DOCUMENTS = 'student-documents',
+  SUBMISSIONS = 'submissions',
+  STUDY_MATERIALS = 'study-materials',
+  KYC_DOCUMENTS = 'kyc-documents',
+}
+
 export interface User {
   id: string;
-  email: string;
+  email?: string;
   phone_number?: string;
   full_name: string;
   role: UserRole;
   school_id?: string;
   education_level?: EducationLevel;
+  class_id?: string;
   is_active: boolean;
   must_change_password: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface CurriculumTopic {
+  id: string;
+  title: string;
+}
+
+export interface CurriculumSubject {
+  id: string;
+  title: string;
+  topics: CurriculumTopic[];
+}
+
+export interface Curriculum {
+  educationLevel: EducationLevel;
+  subjects: CurriculumSubject[];
+}
+
+export interface FileMeta {
+  bucket: StorageBucket;
+  path: string;
+  mimeType?: string;
+  size?: number;
+  publicUrl?: string;
+}
+
+export interface TeacherOnboardingPayload {
+  profile: {
+    full_name: string;
+    email?: string;
+    phone?: string;
+    institutionId: string;
+  };
+  kyc: FileMeta[];
+  curriculum: Curriculum;
+}
+
+export interface StudentRegistrationPayload {
+  full_name: string;
+  email?: string;
+  phone?: string;
+  institutionId: string;
+  classId: string;
+}
+
+export interface DisabilityInfo {
+  hasDisability: boolean;
+  disabilityType?: string;
+  accommodations?: string;
+  notes?: string;
+}
+
+export interface StudentDocuments {
+  kycDocumentUrl?: string;
+  submissionsUrl?: string;
+  studentDocumentsUrl?: string;
+  disability?: DisabilityInfo;
 }
 
 export interface School {
