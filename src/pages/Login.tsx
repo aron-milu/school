@@ -164,13 +164,13 @@ export default function Login() {
                   <BrandLogo className="h-full w-full object-contain" />
                 </div>
                 <div>
-                  <p className="text-sm uppercase tracking-[0.35em] text-white/70">SomaNow</p>
-                  <p className="mt-1 text-2xl font-semibold">Dashboard UI Kit</p>
+                  <p className="text-sm uppercase tracking-[0.35em] text-white/70">Soma356</p>
+                  <p className="mt-1 text-2xl font-semibold">Modern school platform</p>
                 </div>
               </div>
               <div className="mt-14 max-w-xl space-y-6">
                 <p className="text-sm uppercase tracking-[0.35em] text-white/70">Build your digital product</p>
-                <h1 className="text-4xl font-extrabold leading-tight">Build your digital product with our ultimate dashboard UI Kit.</h1>
+                <h1 className="text-4xl font-extrabold leading-tight">Build your digital product with our ultimate Soma356 platform.</h1>
                 <p className="text-base text-white/80">A modern experience for schools, teachers, and guardians with clear navigation, progress tracking, and instant updates.</p>
               </div>
               <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
@@ -209,7 +209,7 @@ export default function Login() {
                       <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Sign in</p>
                       <h2 className="mt-2 text-3xl font-bold text-slate-900">Welcome back</h2>
                     </div>
-                    <div className="rounded-3xl bg-brand px-4 py-2 text-sm font-semibold text-white">SomaNow</div>
+                    <div className="rounded-3xl bg-brand px-4 py-2 text-sm font-semibold text-white">Soma356</div>
                   </div>
                   <p className="text-sm text-slate-500">Access your progress, lessons, assignments, and communication tools in one place.</p>
                   {error && (
