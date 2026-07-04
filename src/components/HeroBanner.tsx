@@ -17,7 +17,7 @@ export default function HeroBanner({
   className?: string;
 }) {
   return (
-    <div className={`overflow-hidden rounded-[2rem] bg-gradient-to-r from-brand via-sky-600 to-cyan-500 text-white shadow-[0_30px_80px_rgba(56,189,248,0.18)] ${className}`}>
+    <div className={`overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-r from-brand via-sky-600 to-cyan-500 text-white shadow-[0_30px_80px_rgba(56,189,248,0.18)] ${className}`}>
       <div className="px-6 py-8 sm:px-8 lg:px-10">
         <div className="grid gap-8 lg:grid-cols-[1.75fr_1.05fr] lg:items-center">
           <div>
@@ -27,11 +27,11 @@ export default function HeroBanner({
             <div className="mt-6 flex flex-wrap gap-3">
               {actions.map((a, i) => (
                 a.href ? (
-                  <a key={i} href={a.href} className={`rounded-full px-5 py-3 text-sm font-semibold ${a.primary ? 'bg-white text-brand shadow-sm' : 'bg-white/10 text-white'}`}>
+                  <a key={i} href={a.href} className={`rounded-full px-5 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-white/40 ${a.primary ? 'bg-white text-brand shadow-sm' : 'bg-white/10 text-white'}`}>
                     {a.label}
                   </a>
                 ) : (
-                  <button key={i} onClick={a.onClick} className={`rounded-full px-5 py-3 text-sm font-semibold ${a.primary ? 'bg-white text-brand shadow-sm' : 'bg-white/10 text-white'}`}>
+                  <button key={i} onClick={a.onClick} className={`rounded-full px-5 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-white/40 ${a.primary ? 'bg-white text-brand shadow-sm' : 'bg-white/10 text-white'}`}>
                     {a.label}
                   </button>
                 )

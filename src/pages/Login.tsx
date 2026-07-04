@@ -18,23 +18,23 @@ const ROLE_ROUTES: Record<UserRole, string> = {
 const FEATURES = [
   {
     icon: <GraduationCap size={18} />,
-    title: 'All-in-one tool',
-    description: 'Build, run, and scale your apps — end to end.',
+    title: 'Student progress',
+    description: 'Track attendance, grades and activity across every class.',
   },
   {
     icon: <Wrench size={18} />,
-    title: 'Easily add & manage your services',
-    description: 'Bring together tasks, projects, timelines, files and more.',
+    title: 'Teacher coordination',
+    description: 'Manage timetables, classrooms, and staff assignments easily.',
   },
   {
     icon: <Shield size={18} />,
-    title: 'Your own company branding',
-    description: 'Create your own unique identity for every dashboard.',
+    title: 'Guardian communication',
+    description: 'Keep parents informed with announcements, results, and updates.',
   },
   {
     icon: <Building2 size={18} />,
-    title: 'Instant Update',
-    description: 'Get access to new products and updates throughout the year.',
+    title: 'Secure school data',
+    description: 'Protect student records, payments and day-to-day operations.',
   },
 ];
 
@@ -169,9 +169,9 @@ export default function Login() {
                 </div>
               </div>
               <div className="mt-14 max-w-xl space-y-6">
-                <p className="text-sm uppercase tracking-[0.35em] text-white/70">Build your digital product</p>
-                <h1 className="text-4xl font-extrabold leading-tight">Build your digital product with our ultimate Soma356 platform.</h1>
-                <p className="text-base text-white/80">A modern experience for schools, teachers, and guardians with clear navigation, progress tracking, and instant updates.</p>
+                <p className="text-sm uppercase tracking-[0.35em] text-white/70">Soma356 school management</p>
+                <h1 className="text-4xl font-extrabold leading-tight">One platform for attendance, classes, and parent communication.</h1>
+                <p className="text-base text-white/80">Empower teachers, support administrators, and keep guardians in sync with every step of the school day.</p>
               </div>
               <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
                 {FEATURES.map(feature => (
