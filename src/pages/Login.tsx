@@ -169,8 +169,7 @@ export default function Login() {
                 </div>
               </div>
               <div className="mt-14 max-w-xl space-y-6">
-                <h1 className="text-4xl font-extrabold leading-tight">One open platform for schools and independent learners, featuring interactive classes, student communities, and parent communication.</h1>
-                <p className="text-base text-white/80">Empower teachers, support administrators, and keep guardians in sync with every step of the school day.</p>
+                <h3 className="text-4xl font-extrabold leading-tight">A community platform connecting schools, students, and parents through online classes and collaborative networks.</h3>
               </div>
               <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
                 {FEATURES.map(feature => (
