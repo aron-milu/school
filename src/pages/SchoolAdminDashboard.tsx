@@ -50,9 +50,12 @@ export default function SchoolAdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<Tab>(() => getDashboardTab(window.location.pathname, TAB_IDS, 'overview'));
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAddModal, setShowAddModal] = useState<'class' | 'student' | 'teacher' | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    try { const raw = localStorage.getItem('soma365-schooladmin-active-tab'); if (raw && TAB_IDS.includes(raw as Tab)) return raw as Tab; } catch {}
+    return getDashboardTab(window.location.pathname, TAB_IDS, 'overview');
+  });
+  const [searchQuery, setSearchQuery] = useState<string>(() => { try { return localStorage.getItem('soma365-schooladmin-search') || ''; } catch { return ''; } });
+  const [showAddModal, setShowAddModal] = useState<'class' | 'student' | 'teacher' | null>(() => { try { const raw = localStorage.getItem('soma365-schooladmin-show-add-modal'); return raw ? (raw as 'class' | 'student' | 'teacher') : null; } catch { return null; } });
 
   const handleLogout = async () => {
     await logout();
@@ -70,6 +73,10 @@ export default function SchoolAdminDashboard() {
       navigate(getDashboardTabPath('/school-admin', tab), { replace: true });
     }
   }, [location.pathname, location.hash, navigate]);
+
+  useEffect(() => { try { localStorage.setItem('soma365-schooladmin-active-tab', activeTab); } catch {} }, [activeTab]);
+  useEffect(() => { try { localStorage.setItem('soma365-schooladmin-search', searchQuery); } catch {} }, [searchQuery]);
+  useEffect(() => { try { localStorage.setItem('soma365-schooladmin-show-add-modal', showAddModal || ''); } catch {} }, [showAddModal]);
 
   const navigateToTab = (tab: Tab) => {
     setActiveTab(tab);

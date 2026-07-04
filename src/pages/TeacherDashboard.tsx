@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import HeroBanner from '../components/HeroBanner';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { StorageBucket } from '../types';
@@ -61,11 +62,23 @@ export default function TeacherDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<Tab>(() => getDashboardTab(window.location.pathname, TAB_IDS, 'overview'));
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    try {
+      const raw = localStorage.getItem('soma365-teacher-active-tab');
+      if (raw && TAB_IDS.includes(raw as Tab)) return raw as Tab;
+    } catch {}
+    return getDashboardTab(window.location.pathname, TAB_IDS, 'overview');
+  });
+  const [searchQuery, setSearchQuery] = useState<string>(() => {
+    try { return localStorage.getItem('soma365-teacher-search') || ''; } catch { return ''; }
+  });
   const [chatInput, setChatInput] = useState('');
-  const [selectedChat, setSelectedChat] = useState(1);
-  const [showContacts, setShowContacts] = useState(true);
+  const [selectedChat, setSelectedChat] = useState<number>(() => {
+    try { const raw = localStorage.getItem('soma365-teacher-selected-chat'); return raw ? parseInt(raw, 10) : 1; } catch { return 1; }
+  });
+  const [showContacts, setShowContacts] = useState<boolean>(() => {
+    try { const raw = localStorage.getItem('soma365-teacher-show-contacts'); return raw ? raw === 'true' : true; } catch { return true; }
+  });
 
   const handleLogout = async () => {
     await logout();
@@ -83,6 +96,11 @@ export default function TeacherDashboard() {
       navigate(getDashboardTabPath('/teacher', tab), { replace: true });
     }
   }, [location.pathname, location.hash, navigate]);
+
+  useEffect(() => { try { localStorage.setItem('soma365-teacher-active-tab', activeTab); } catch {} }, [activeTab]);
+  useEffect(() => { try { localStorage.setItem('soma365-teacher-search', searchQuery); } catch {} }, [searchQuery]);
+  useEffect(() => { try { localStorage.setItem('soma365-teacher-selected-chat', String(selectedChat)); } catch {} }, [selectedChat]);
+  useEffect(() => { try { localStorage.setItem('soma365-teacher-show-contacts', String(showContacts)); } catch {} }, [showContacts]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -151,16 +169,12 @@ function OverviewTab() {
   const { user } = useAuth();
   return (
     <div className="space-y-6">
-      {/* Welcome */}
-      <div className="bg-brand rounded-2xl p-6 text-white">
-        <h2 className="text-2xl font-bold">Welcome back, {user?.full_name?.split(' ').pop() || 'Teacher'}!</h2>
-        <p className="text-slate-100 mt-1">You have 2 pending assignments to grade and 4 new messages.</p>
-        <div className="flex gap-3 mt-4">
-          <span className="bg-white/20 px-3 py-1 rounded-full text-sm">3 Classes</span>
-          <span className="bg-white/20 px-3 py-1 rounded-full text-sm">103 Students</span>
-          <span className="bg-white/20 px-3 py-1 rounded-full text-sm">Mathematics</span>
-        </div>
-      </div>
+      <HeroBanner
+        title={`Welcome back, ${user?.full_name?.split(' ').pop() || 'Teacher'}!`}
+        subtitle={`You have 2 pending assignments to grade and 4 new messages.`}
+        actions={[{ label: 'View assignments', onClick: () => setActiveTab('assignments'), primary: true }]}
+        stats={[{ label: 'Classes', value: '3', icon: <GraduationCap size={20} /> }, { label: 'Students', value: '103', icon: <Users size={20} /> }]}
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

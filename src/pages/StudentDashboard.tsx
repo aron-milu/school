@@ -33,13 +33,7 @@ const ASSIGNMENTS = [
 ];
 
 type StudyMaterial = { id: number; title: string; subject: string; type: string; size: string; downloads: number; fileUrl?: string };
-type MaterialsTabProps = {
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
-  filteredMaterials: StudyMaterial[];
-  onDownload: (material: StudyMaterial) => void;
-  level: string;
-};
+// MaterialsTabProps removed — using inline prop types below
 
 const STUDY_MATERIALS_BY_LEVEL: Record<string, StudyMaterial[]> = {
   secondary: [
@@ -145,7 +139,13 @@ export default function StudentDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<Tab>(() => getDashboardTab(window.location.pathname, TAB_IDS, 'dashboard'));
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    try {
+      const raw = localStorage.getItem('soma365-active-tab');
+      if (raw && TAB_IDS.includes(raw as Tab)) return raw as Tab;
+    } catch {}
+    return getDashboardTab(window.location.pathname, TAB_IDS, 'dashboard');
+  });
   const [selectedChat, setSelectedChat] = useState(() => CHAT_CONTACTS[0]?.id || 1);
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -159,6 +159,14 @@ export default function StudentDashboard() {
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
+    }
+  });
+  const [assignments, setAssignments] = useState<any[]>(() => {
+    try {
+      const raw = localStorage.getItem('soma365-assignments');
+      return raw ? JSON.parse(raw) : ASSIGNMENTS;
+    } catch {
+      return ASSIGNMENTS;
     }
   });
   const [startAssignment, setStartAssignment] = useState<typeof ASSIGNMENTS[0] | null>(null);
@@ -182,6 +190,10 @@ export default function StudentDashboard() {
     setActiveTab(tab);
     navigate(getDashboardTabPath('/student', tab));
   };
+
+  useEffect(() => {
+    try { localStorage.setItem('soma365-active-tab', activeTab); } catch {}
+  }, [activeTab]);
 
   const dashboardTabLabels: Record<Tab, string> = {
     dashboard: 'Overview',
@@ -268,6 +280,11 @@ This download is a demo file to show how the download feature works.`;
   const handleStartAssignment = (a: typeof ASSIGNMENTS[0]) => {
     setStartAssignment(a);
     setStartAnswers({});
+    setAssignments(prev => {
+      const next = prev.map(item => item.id === a.id ? { ...item, status: 'in-progress' } : item);
+      try { localStorage.setItem('soma365-assignments', JSON.stringify(next)); } catch {}
+      return next;
+    });
     try {
       const entry = { text: `Started assignment: ${a.title}`, time: new Date().toLocaleString() };
       const next = [entry, ...recentActivity].slice(0, 30);
@@ -278,11 +295,15 @@ This download is a demo file to show how the download feature works.`;
 
   const handleSubmitAssignment = () => {
     if (!startAssignment) return;
-    const a = ASSIGNMENTS.find(a => a.id === startAssignment.id);
-    if (a) a.status = 'submitted';
+    // mark assignment as submitted and persist
+    setAssignments(prev => {
+      const next = prev.map(item => item.id === startAssignment.id ? { ...item, status: 'submitted' } : item);
+      try { localStorage.setItem('soma365-assignments', JSON.stringify(next)); } catch {}
+      return next;
+    });
     setStartAssignment(null);
     try {
-      const entry = { text: `Submitted assignment: ${a?.title || 'assignment'}`, time: new Date().toLocaleString() };
+      const entry = { text: `Submitted assignment: ${startAssignment.title}`, time: new Date().toLocaleString() };
       const next = [entry, ...recentActivity].slice(0, 30);
       setRecentActivity(next);
       localStorage.setItem('soma365-recent-activity', JSON.stringify(next));
@@ -460,9 +481,9 @@ This download is a demo file to show how the download feature works.`;
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
-        {activeTab === 'dashboard' && <DashboardTab onViewAssignments={() => navigateToTab('assignments')} onViewMaterials={() => navigateToTab('materials')} onViewAssignment={(a) => setAssignmentModal(a)} />}
+        {activeTab === 'dashboard' && <DashboardTab assignments={assignments} onViewAssignments={() => navigateToTab('assignments')} onViewMaterials={() => navigateToTab('materials')} onViewAssignment={(a) => setAssignmentModal(a)} />}
         {activeTab === 'courses' && <CoursesTab onContinue={() => navigateToTab('mastery')} />}
-        {activeTab === 'assignments' && <AssignmentsTab onViewDetails={setAssignmentModal} onStartAssignment={handleStartAssignment} />}
+        {activeTab === 'assignments' && <AssignmentsTab assignments={assignments} setAssignments={setAssignments} onViewDetails={setAssignmentModal} onStartAssignment={handleStartAssignment} />}
         {activeTab === 'materials' && <MaterialsTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} filteredMaterials={filteredMaterials} onDownload={handleDownload} level={user?.education_level || 'secondary'} />}
         {activeTab === 'mastery' && <MasteryTab />}
         {activeTab === 'ai-tutor' && <AITutorTab />}
@@ -486,9 +507,8 @@ function BarChart3(props: React.SVGProps<SVGSVGElement> & { size?: number }) {
   );
 }
 
-function DashboardTab({ onViewAssignments, onViewMaterials, onViewAssignment }: { onViewAssignments: () => void; onViewMaterials: () => void; onViewAssignment: (a: typeof ASSIGNMENTS[0]) => void }) {
+function DashboardTab({ assignments, onViewAssignments, onViewMaterials, onViewAssignment }: { assignments: any[]; onViewAssignments: () => void; onViewMaterials: () => void; onViewAssignment: (a: any) => void }) {
   const { user } = useAuth();
-  const firstName = user?.full_name?.split(' ')[0] || 'Student';
   const heroStats = [
     { label: 'Average score', value: '78%', icon: <BarChart3 size={20} />, accent: 'bg-white/15' },
     { label: 'Class rank', value: '5 / 38', icon: <CheckCircle2 size={20} />, accent: 'bg-white/15' },
@@ -582,7 +602,7 @@ function DashboardTab({ onViewAssignments, onViewMaterials, onViewAssignment }: 
             <button onClick={onViewAssignments} className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600">View all</button>
           </div>
           <div className="mt-6 space-y-3">
-            {ASSIGNMENTS.filter(a => a.status === 'pending').slice(0, 4).map(a => (
+            {assignments.filter(a => a.status === 'pending').slice(0, 4).map(a => (
               <button key={a.id} onClick={() => onViewAssignment(a)} className="flex w-full items-center justify-between gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-left transition hover:bg-slate-100">
                 <div className="flex min-w-0 items-center gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-brand text-white"><FileText size={20} /></div>
@@ -694,9 +714,9 @@ function CoursesTab({ onContinue }: { onContinue: (subject: string) => void }) {
   );
 }
 
-function AssignmentsTab({ onViewDetails, onStartAssignment }: { onViewDetails: (a: typeof ASSIGNMENTS[0]) => void; onStartAssignment: (a: typeof ASSIGNMENTS[0]) => void }) {
-  const [filter, setFilter] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all');
-  const filtered = ASSIGNMENTS.filter(a => filter === 'all' || a.status === filter);
+function AssignmentsTab({ assignments, setAssignments, onViewDetails, onStartAssignment }: { assignments: any[]; setAssignments: React.Dispatch<React.SetStateAction<any[]>>; onViewDetails: (a: any) => void; onStartAssignment: (a: any) => void }) {
+  const [filter, setFilter] = useState<'all' | 'pending' | 'submitted' | 'graded' | 'in-progress'>('all');
+  const filtered = assignments.filter(a => filter === 'all' || a.status === filter);
 
   return (
     <div className="space-y-6">
@@ -732,12 +752,18 @@ function AssignmentsTab({ onViewDetails, onStartAssignment }: { onViewDetails: (
               </div>
             </div>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              {a.status === 'pending' && (
+                {a.status === 'pending' && (
                 <>
                   <button onClick={() => onStartAssignment(a)} className="w-full sm:w-auto px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:bg-brand-600 transition flex items-center justify-center gap-1.5"><Play size={14} /> Start Assignment</button>
                   <button onClick={() => onViewDetails(a)} className="w-full sm:w-auto px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition flex items-center justify-center gap-1.5"><Eye size={14} /> View Instructions</button>
                 </>
               )}
+                {a.status === 'in-progress' && (
+                  <>
+                    <button onClick={() => onViewDetails(a)} className="w-full sm:w-auto px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition flex items-center justify-center gap-1.5"><Eye size={14} /> Continue</button>
+                    <button onClick={() => { setAssignments(prev => prev.map(item => item.id === a.id ? { ...item, status: 'submitted' } : item)); }} className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">Mark Submitted</button>
+                  </>
+                )}
               {a.status === 'submitted' && (
                 <button onClick={() => onViewDetails(a)} className="w-full sm:w-auto px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition flex items-center justify-center gap-1.5"><Eye size={14} /> View Submission</button>
               )}

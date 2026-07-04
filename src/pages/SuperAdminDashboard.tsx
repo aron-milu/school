@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import HeroBanner from '../components/HeroBanner';
 import { useAuth } from '../context/AuthContext';
 import {
   LogOut, Globe, AlertCircle, Plus, Search, X,
@@ -50,11 +51,14 @@ export default function SuperAdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<Tab>(() => getDashboardTab(window.location.pathname, TAB_IDS, 'overview'));
-  const [searchQuery, setSearchQuery] = useState('');
-  const [levelFilter, setLevelFilter] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedSchool, setSelectedSchool] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    try { const raw = localStorage.getItem('soma365-superadmin-active-tab'); if (raw && TAB_IDS.includes(raw as Tab)) return raw as Tab; } catch {}
+    return getDashboardTab(window.location.pathname, TAB_IDS, 'overview');
+  });
+  const [searchQuery, setSearchQuery] = useState<string>(() => { try { return localStorage.getItem('soma365-superadmin-search') || ''; } catch { return ''; } });
+  const [levelFilter, setLevelFilter] = useState<string>(() => { try { return localStorage.getItem('soma365-superadmin-level-filter') || 'all'; } catch { return 'all'; } });
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(() => { try { return localStorage.getItem('soma365-superadmin-show-create-modal') === 'true'; } catch { return false; } });
+  const [selectedSchool, setSelectedSchool] = useState<number | null>(() => { try { const raw = localStorage.getItem('soma365-superadmin-selected-school'); return raw ? parseInt(raw, 10) : null; } catch { return null; } });
 
   const handleLogout = async () => {
     await logout();
@@ -72,6 +76,12 @@ export default function SuperAdminDashboard() {
       navigate(getDashboardTabPath('/super-admin', tab), { replace: true });
     }
   }, [location.pathname, location.hash, navigate]);
+
+  useEffect(() => { try { localStorage.setItem('soma365-superadmin-active-tab', activeTab); } catch {} }, [activeTab]);
+  useEffect(() => { try { localStorage.setItem('soma365-superadmin-search', searchQuery); } catch {} }, [searchQuery]);
+  useEffect(() => { try { localStorage.setItem('soma365-superadmin-level-filter', levelFilter); } catch {} }, [levelFilter]);
+  useEffect(() => { try { localStorage.setItem('soma365-superadmin-show-create-modal', String(showCreateModal)); } catch {} }, [showCreateModal]);
+  useEffect(() => { try { localStorage.setItem('soma365-superadmin-selected-school', selectedSchool ? String(selectedSchool) : ''); } catch {} }, [selectedSchool]);
 
   const navigateToTab = (tab: Tab) => {
     setActiveTab(tab);
@@ -214,6 +224,7 @@ function OverviewTab({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          <HeroBanner title="Platform insights" subtitle="Overview of schools, students, and system health" actions={[{ label: 'Manage schools', onClick: () => setActiveTab('schools'), primary: true }]} stats={stats} />
           {/* System Status */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h3 className="text-lg font-bold text-brand mb-4">System Status</h3>
