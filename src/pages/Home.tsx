@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { UserRole } from '../types';
-import { BookOpen, Users, GraduationCap, Wrench } from 'lucide-react';
+import { BookOpen, Users, GraduationCap, Wrench, Activity } from 'lucide-react';
 
 const ROLE_ROUTES: Record<UserRole, string> = {
   student: '/student',
@@ -11,102 +11,105 @@ const ROLE_ROUTES: Record<UserRole, string> = {
   guardian: '/guardian',
 };
 
+function StatCard({ label, value, delta }: { label: string; value: string; delta?: string }) {
+  return (
+    <div className="rounded-2xl border border-white/6 bg-white/3 p-5 backdrop-blur-sm">
+      <p className="text-xs uppercase tracking-wide text-slate-300">{label}</p>
+      <div className="mt-3 flex items-baseline gap-3">
+        <p className="text-2xl font-semibold text-white">{value}</p>
+        {delta && <p className="text-sm text-green-300">{delta}</p>}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.3),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.18),_transparent_20%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="grid gap-14 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-300 backdrop-blur-sm">
-                Soma365: the smart education experience
-              </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 text-white py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+          <div className="lg:col-span-7">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/6 px-3 py-1 text-xs uppercase tracking-wider text-slate-300">Soma365 • Smart school portal</div>
 
-              <div className="space-y-6 max-w-2xl">
-                <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">Empower every learner, teacher, and guardian with a single modern school portal.</h1>
-                <p className="text-lg leading-8 text-slate-300">From student progress tracking to teacher productivity and guardian engagement, Soma365 delivers polished workflows, clear insights, and a beautiful experience for every role.</p>
-              </div>
+            <h1 className="mt-6 text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">A single platform to empower learners, teachers and guardians.</h1>
+            <p className="mt-4 max-w-2xl text-lg text-slate-300">Clean workflows, clear analytics, and role-aware tools — built for modern schools in Uganda and beyond.</p>
 
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <Link
-                  to={user ? ROLE_ROUTES[user.role] : '/login'}
-                  className="inline-flex items-center justify-center rounded-full bg-cyan-400 px-8 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-500/30 transition hover:bg-cyan-300"
-                >
-                  {user ? 'Open dashboard' : 'Login to Demo'}
-                </Link>
-                <a
-                  href="#features"
-                  className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 px-8 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15"
-                >
-                  See key benefits
-                </a>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-3">
-                {[
-                  { label: 'Trusted by', value: '120+ schools' },
-                  { label: 'Student growth', value: '98% on track' },
-                  { label: 'Guardian access', value: '24/7 updates' },
-                ].map(item => (
-                  <div key={item.label} className="rounded-[1.75rem] border border-white/10 bg-slate-900/80 p-5 shadow-xl shadow-slate-950/20 backdrop-blur-sm">
-                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{item.label}</p>
-                    <p className="mt-4 text-2xl font-semibold text-white">{item.value}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Link
+                to={user ? ROLE_ROUTES[user.role] : '/login'}
+                className="inline-flex items-center justify-center rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95"
+              >
+                {user ? 'Open dashboard' : 'Try demo account'}
+              </Link>
+              <a href="#features" className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/90">
+                See features
+              </a>
             </div>
 
-            <div className="rounded-[2.25rem] border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/30 backdrop-blur-xl">
-              <div className="rounded-[1.75rem] border border-cyan-400/10 bg-slate-950/90 p-6 shadow-inner shadow-slate-950/20">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/80">Platform preview</p>
-                    <h2 className="mt-3 text-3xl font-bold text-white">One experience across every role.</h2>
-                  </div>
-                  <span className="rounded-2xl bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200">Live demo</span>
-                </div>
+            <div className="mt-10 grid gap-4 sm:grid-cols-3">
+              <StatCard label="Active students" value="1,240" delta="+4.2%" />
+              <StatCard label="Assignments due" value="28" delta="-1.1%" />
+              <StatCard label="Guardian logins" value="3,102" delta="+6.8%" />
+            </div>
 
-                <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                  {[
-                    { icon: <GraduationCap size={20} />, title: 'Student progress', text: 'Real-time performance and assignment summaries.' },
-                    { icon: <Users size={20} />, title: 'Teacher tools', text: 'Plan lessons, share materials, and manage classes.' },
-                    { icon: <Wrench size={20} />, title: 'Vocational focus', text: 'Practice, assessment, and skills tracking.' },
-                    { icon: <BookOpen size={20} />, title: 'Guardian insights', text: 'Stay connected with attendance and reports.' },
-                  ].map(item => (
-                    <div key={item.title} className="rounded-3xl border border-white/10 bg-slate-950/90 p-5 transition hover:border-cyan-400/30">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300">{item.icon}</div>
-                      <h3 className="mt-4 text-lg font-semibold text-white">{item.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-400">{item.text}</p>
-                    </div>
-                  ))}
-                </div>
+            <div className="mt-10 rounded-2xl bg-white/3 p-4 shadow-sm">
+              <h3 className="text-sm font-semibold text-white">Quick actions</h3>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <Link to="/teacher/upload" className="rounded-lg bg-white/6 px-4 py-2 text-sm text-white/90">Create assignment</Link>
+                <Link to="/student/register" className="rounded-lg bg-white/6 px-4 py-2 text-sm text-white/90">Register student</Link>
+                <Link to="/materials/upload" className="rounded-lg bg-white/6 px-4 py-2 text-sm text-white/90">Upload material</Link>
               </div>
             </div>
           </div>
 
-          <section id="features" className="mt-20 rounded-[2rem] border border-white/10 bg-slate-900/80 p-10 shadow-2xl shadow-slate-950/20 backdrop-blur-xl">
-            <div className="grid gap-8 lg:grid-cols-3">
-              {[
-                { title: 'Smart analytics', description: 'Immediate insights into grades, attendance, and improvement opportunities.' },
-                { title: 'Secure access', description: 'Role-based permissions with trusted guardian and staff workflows.' },
-                { title: 'Ready to demo', description: 'Sample student and staff accounts make it easy to explore instantly.' },
-              ].map(feature => (
-                <div key={feature.title} className="space-y-4 rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-8 transition hover:-translate-y-1 hover:border-cyan-400/20">
-                  <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
-                  <p className="text-sm leading-6 text-slate-400">{feature.description}</p>
+          <aside className="lg:col-span-5">
+            <div className="rounded-2xl border border-white/6 bg-gradient-to-br from-slate-800/30 to-slate-900/30 p-6 shadow-xl">
+              <div className="h-44 rounded-xl bg-[url('/hero-dashboard.svg')] bg-cover bg-center bg-no-repeat filter contrast-90 brightness-90 rounded-md" />
+              <div className="mt-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-300">Platform preview</p>
+                  <p className="mt-1 text-lg font-semibold">One experience across every role</p>
                 </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </div>
+                <div className="rounded-full bg-white/6 px-3 py-1 text-sm text-slate-200">Live demo</div>
+              </div>
 
-      <footer className="border-t border-slate-800 bg-slate-950/80 py-8 text-center text-sm text-slate-500">
-        © {new Date().getFullYear()} Soma365 — Built for modern Ugandan education.
-      </footer>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-white/6 p-2 text-cyan-300"><GraduationCap size={18} /></div>
+                  <div>
+                    <p className="text-sm font-semibold">Student progress</p>
+                    <p className="text-xs text-slate-400">Real-time reports & benchmarks</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-white/6 p-2 text-cyan-300"><Users size={18} /></div>
+                  <div>
+                    <p className="text-sm font-semibold">Teacher tools</p>
+                    <p className="text-xs text-slate-400">Plans, grading, resources</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <section id="features" className="mt-12 grid gap-6 sm:grid-cols-3">
+          {[
+            { title: 'Smart analytics', description: 'Immediate insights into grades, attendance, and improvement opportunities.' },
+            { title: 'Secure access', description: 'Role-based permissions for teachers, guardians and admins.' },
+            { title: 'Ready to demo', description: 'Preconfigured demo accounts to explore features quickly.' },
+          ].map(f => (
+            <div key={f.title} className="rounded-2xl border border-white/6 bg-white/3 p-6">
+              <h3 className="text-lg font-semibold">{f.title}</h3>
+              <p className="mt-2 text-sm text-slate-300">{f.description}</p>
+            </div>
+          ))}
+        </section>
+
+        <footer className="mt-12 border-t border-white/6 pt-8 text-center text-sm text-slate-400">© {new Date().getFullYear()} Soma365 — Built for modern Ugandan education.</footer>
+      </div>
     </div>
   );
 }

@@ -33,6 +33,13 @@ const ASSIGNMENTS = [
 ];
 
 type StudyMaterial = { id: number; title: string; subject: string; type: string; size: string; downloads: number; fileUrl?: string };
+type MaterialsTabProps = {
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  filteredMaterials: StudyMaterial[];
+  onDownload: (material: StudyMaterial) => void;
+  level: string;
+};
 
 const STUDY_MATERIALS_BY_LEVEL: Record<string, StudyMaterial[]> = {
   secondary: [
@@ -146,6 +153,14 @@ export default function StudentDashboard() {
   const [communityChat, setCommunityChat] = useState<typeof COMMUNITIES[0] | null>(null);
   const [communityInput, setCommunityInput] = useState('');
   const [downloadToast, setDownloadToast] = useState('');
+  const [recentActivity, setRecentActivity] = useState<Array<{ text: string; time: string }>>(() => {
+    try {
+      const raw = localStorage.getItem('soma365-recent-activity');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
   const [startAssignment, setStartAssignment] = useState<typeof ASSIGNMENTS[0] | null>(null);
   const [startAnswers, setStartAnswers] = useState<Record<number, string>>({});
 
@@ -167,6 +182,24 @@ export default function StudentDashboard() {
     setActiveTab(tab);
     navigate(getDashboardTabPath('/student', tab));
   };
+
+  const dashboardTabLabels: Record<Tab, string> = {
+    dashboard: 'Overview',
+    courses: 'Courses',
+    assignments: 'Assignments',
+    materials: 'Materials',
+    mastery: 'Mastery',
+    'ai-tutor': 'AI Tutor',
+    'speak-tutor': 'Speak Tutor',
+    'ask-teacher': 'Ask Teacher',
+    'assisted-learning': 'Assisted Learning',
+    'lifelong-learning': 'Lifelong Learning',
+    whiteboard: 'Whiteboard',
+    chat: 'Chat',
+    communities: 'Communities',
+  };
+
+  const dashboardNavTabs: Tab[] = ['dashboard', 'courses', 'assignments', 'materials', 'mastery', 'ai-tutor', 'chat', 'communities'];
 
   const currentMaterials = STUDY_MATERIALS_BY_LEVEL[user?.education_level || 'secondary'] || STUDY_MATERIALS_BY_LEVEL.secondary;
   const filteredMaterials = currentMaterials.filter(m =>
@@ -222,12 +255,25 @@ This download is a demo file to show how the download feature works.`;
       setDownloadToast(`Failed to download "${material.title}".`);
     } finally {
       setTimeout(() => setDownloadToast(''), 2500);
+      // record activity
+      try {
+        const entry = { text: `Downloaded ${material.title}`, time: new Date().toLocaleString() };
+        const next = [entry, ...recentActivity].slice(0, 30);
+        setRecentActivity(next);
+        localStorage.setItem('soma365-recent-activity', JSON.stringify(next));
+      } catch {}
     }
   };
 
   const handleStartAssignment = (a: typeof ASSIGNMENTS[0]) => {
     setStartAssignment(a);
     setStartAnswers({});
+    try {
+      const entry = { text: `Started assignment: ${a.title}`, time: new Date().toLocaleString() };
+      const next = [entry, ...recentActivity].slice(0, 30);
+      setRecentActivity(next);
+      localStorage.setItem('soma365-recent-activity', JSON.stringify(next));
+    } catch {}
   };
 
   const handleSubmitAssignment = () => {
@@ -235,6 +281,12 @@ This download is a demo file to show how the download feature works.`;
     const a = ASSIGNMENTS.find(a => a.id === startAssignment.id);
     if (a) a.status = 'submitted';
     setStartAssignment(null);
+    try {
+      const entry = { text: `Submitted assignment: ${a?.title || 'assignment'}`, time: new Date().toLocaleString() };
+      const next = [entry, ...recentActivity].slice(0, 30);
+      setRecentActivity(next);
+      localStorage.setItem('soma365-recent-activity', JSON.stringify(next));
+    } catch {}
   };
 
   return (
@@ -383,10 +435,32 @@ This download is a demo file to show how the download feature works.`;
         </div>
       </header>
 
-      {/* Navigation moved to the left sidebar. Route paths update the active page. */}
+      {/* Quick dashboard navigation for primary student workflows. */}
+
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Your workspace</p>
+              <h2 className="mt-1 text-xl font-semibold text-slate-950">Keep your learning on track</h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 overflow-x-auto py-1">
+              {dashboardNavTabs.map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => navigateToTab(tab)}
+                  className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === tab ? 'bg-brand text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                >
+                  {dashboardTabLabels[tab]}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
-        {activeTab === 'dashboard' && <DashboardTab onViewAssignments={() => navigateToTab('assignments')} onViewAssignment={(a) => setAssignmentModal(a)} />}
+        {activeTab === 'dashboard' && <DashboardTab onViewAssignments={() => navigateToTab('assignments')} onViewMaterials={() => navigateToTab('materials')} onViewAssignment={(a) => setAssignmentModal(a)} />}
         {activeTab === 'courses' && <CoursesTab onContinue={() => navigateToTab('mastery')} />}
         {activeTab === 'assignments' && <AssignmentsTab onViewDetails={setAssignmentModal} onStartAssignment={handleStartAssignment} />}
         {activeTab === 'materials' && <MaterialsTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} filteredMaterials={filteredMaterials} onDownload={handleDownload} level={user?.education_level || 'secondary'} />}
@@ -412,99 +486,134 @@ function BarChart3(props: React.SVGProps<SVGSVGElement> & { size?: number }) {
   );
 }
 
-function DashboardTab({ onViewAssignments, onViewAssignment }: { onViewAssignments: () => void; onViewAssignment: (a: typeof ASSIGNMENTS[0]) => void }) {
+function DashboardTab({ onViewAssignments, onViewMaterials, onViewAssignment }: { onViewAssignments: () => void; onViewMaterials: () => void; onViewAssignment: (a: typeof ASSIGNMENTS[0]) => void }) {
   const { user } = useAuth();
+  const firstName = user?.full_name?.split(' ')[0] || 'Student';
+  const heroStats = [
+    { label: 'Average score', value: '78%', icon: <BarChart3 size={20} />, accent: 'bg-white/15' },
+    { label: 'Class rank', value: '5 / 38', icon: <CheckCircle2 size={20} />, accent: 'bg-white/15' },
+    { label: 'Attendance', value: '96%', icon: <Calendar size={20} />, accent: 'bg-white/15' },
+    { label: 'Assignments done', value: '12 / 15', icon: <FileText size={20} />, accent: 'bg-white/15' },
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-lg border border-brand/20 bg-white shadow-sm">
-        <div className="bg-brand px-6 py-6 text-white sm:px-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-brand via-sky-600 to-cyan-500 text-white shadow-[0_30px_80px_rgba(56,189,248,0.25)]">
+        <div className="px-6 py-8 sm:px-8 lg:px-10">
+          <div className="grid gap-8 lg:grid-cols-[1.75fr_1.05fr] lg:items-center">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-white/75">Student dashboard</p>
-              <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Good morning, {user?.full_name?.split(' ')[1] || 'Sarah'}</h2>
-              <p className="mt-2 max-w-2xl text-sm text-white/80">You have 3 pending assignments, 2 new messages, and one study group update waiting for review.</p>
+              <p className="text-xs uppercase tracking-[0.32em] text-white/80">Student workspace</p>
+              <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Beautiful learning, built for you.</h1>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/85">Keep your assignments, studies, and progress aligned in one polished student dashboard. Fast access to materials, grades, and tutor support.</p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button onClick={onViewAssignments} className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-brand shadow-sm transition hover:bg-slate-100">Review assignments</button>
+                <button onClick={onViewMaterials} className="rounded-full border border-white/35 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20">Browse materials</button>
+              </div>
             </div>
-            <button
-              onClick={onViewAssignments}
-              className="inline-flex w-fit items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand shadow-sm transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-white/60"
-            >
-              <FileText size={16} /> Review assignments
-            </button>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {heroStats.map(stat => (
+                <div key={stat.label} className="rounded-[1.75rem] border border-white/20 bg-white/10 p-5 shadow-sm backdrop-blur">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${stat.accent}`}>{stat.icon}</div>
+                    <span className="text-xs uppercase tracking-[0.24em] text-white/75">Overview</span>
+                  </div>
+                  <p className="mt-5 text-3xl font-semibold text-white">{stat.value}</p>
+                  <p className="mt-2 text-sm text-white/80">{stat.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 bg-white px-6 py-3 sm:px-8">
-          <span className="rounded-md bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">S4 Blue</span>
-          <span className="rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Lubiri Secondary School</span>
-          <span className="rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Term 2, 2026</span>
+        <div className="border-t border-white/15 px-6 py-5 sm:px-8">
+          <div className="flex flex-wrap gap-3 text-sm text-white/80">
+            <span className="rounded-full bg-white/10 px-3 py-2">Class: S4 Blue</span>
+            <span className="rounded-full bg-white/10 px-3 py-2">School: Lubiri Secondary</span>
+            <span className="rounded-full bg-white/10 px-3 py-2">Term 2, 2026</span>
+          </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Average Score', value: '78%', icon: <BarChart3 size={20} />, color: 'bg-brand text-white', action: 'Review scores' },
-          { label: 'Class Rank', value: '5/38', icon: <CheckCircle2 size={20} />, color: 'bg-slate-700 text-white', action: 'See rank' },
-          { label: 'Attendance', value: '96%', icon: <Calendar size={20} />, color: 'bg-slate-600 text-white', action: 'View attendance' },
-          { label: 'Assignments Done', value: '12/15', icon: <FileText size={20} />, color: 'bg-brand-600 text-white', action: 'Open assignments' },
-        ].map(stat => (
-          <div key={stat.label} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <div className="mb-4 flex items-center justify-between">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.color}`}>{stat.icon}</div>
-              <span className="text-xs font-semibold text-emerald-600">On track</span>
-            </div>
-            <p className="text-2xl font-bold text-slate-950">{stat.value}</p>
-            <p className="mt-1 text-sm font-medium text-slate-500">{stat.label}</p>
-            <button
-              type="button"
-              onClick={onViewAssignments}
-              className="mt-5 inline-flex items-center rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white transition hover:bg-brand-600"
-            >
-              {stat.action}
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-          <div className="mb-5 flex items-center justify-between">
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <h3 className="text-lg font-bold text-slate-950">Upcoming Assignments</h3>
-              <p className="mt-1 text-sm text-slate-500">Prioritized by nearest due date.</p>
+              <h2 className="text-xl font-semibold text-slate-950">Progress overview</h2>
+              <p className="mt-1 text-sm text-slate-500">Your key scores and readiness at a glance.</p>
             </div>
-            <button onClick={onViewAssignments} className="rounded-lg px-3 py-2 text-sm font-semibold text-brand hover:bg-brand-50">View all</button>
+            <button onClick={onViewAssignments} className="text-sm font-semibold text-brand transition hover:text-brand-700">View all assignments</button>
           </div>
-          <div className="space-y-3">
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {heroStats.slice(0, 4).map(stat => (
+              <div key={stat.label} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-brand">{stat.icon}</div>
+                  <span className="text-xs uppercase tracking-[0.24em] text-slate-500">{stat.label}</span>
+                </div>
+                <p className="mt-5 text-3xl font-semibold text-slate-950">{stat.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-slate-950">Smart summary</h2>
+          <p className="mt-1 text-sm text-slate-500">Actionable highlights from your recent learning.</p>
+          <div className="mt-6 space-y-4">
+            <div className="rounded-[1.5rem] bg-slate-50 p-5">
+              <p className="text-sm font-semibold text-slate-950">Most urgent</p>
+              <p className="mt-2 text-slate-600">Submit the Physics lab report before tomorrow to keep your week on track.</p>
+            </div>
+            <div className="rounded-[1.5rem] bg-slate-50 p-5">
+              <p className="text-sm font-semibold text-slate-950">Study tip</p>
+              <p className="mt-2 text-slate-600">Review your Chemistry quiz feedback and schedule a 15-minute revision session.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-950">Upcoming assignments</h2>
+              <p className="mt-1 text-sm text-slate-500">Due soon and ready to start.</p>
+            </div>
+            <button onClick={onViewAssignments} className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600">View all</button>
+          </div>
+          <div className="mt-6 space-y-3">
             {ASSIGNMENTS.filter(a => a.status === 'pending').slice(0, 4).map(a => (
-              <button key={a.id} onClick={() => onViewAssignment(a)} className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3 text-left transition hover:border-brand/30 hover:bg-brand-50/40">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500"><FileText size={18} className="text-white" /></div>
+              <button key={a.id} onClick={() => onViewAssignment(a)} className="flex w-full items-center justify-between gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-left transition hover:bg-slate-100">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-brand text-white"><FileText size={20} /></div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-950">{a.title}</p>
-                    <p className="text-xs text-slate-500">{a.subject} - {a.type}</p>
+                    <p className="mt-1 text-xs text-slate-500">{a.subject} · {a.type}</p>
                   </div>
                 </div>
-                <div className="shrink-0 pl-4 text-right">
+                <div className="text-right">
                   <p className="text-sm font-semibold text-slate-900">{a.dueDate}</p>
-                  <p className="text-xs font-medium text-amber-600">{a.points} pts</p>
+                  <p className="mt-1 text-xs text-slate-500">{a.points} pts</p>
                 </div>
               </button>
             ))}
           </div>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-1 text-lg font-bold text-slate-950">Recent Activity</h3>
-          <p className="mb-5 text-sm text-slate-500">Latest learning actions.</p>
-          <div className="space-y-4">
+
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-slate-950">Recent activity</h2>
+          <p className="mt-1 text-sm text-slate-500">What happened in your learning feed.</p>
+          <div className="mt-6 space-y-4">
             {[
-              { text: 'Submitted Cell Division Essay', time: '2 hrs ago', icon: <CheckCircle2 size={16} className="text-emerald-600" /> },
-              { text: 'Scored 13/15 on Chemistry Quiz', time: 'Yesterday', icon: <CheckCircle2 size={16} className="text-brand" /> },
-              { text: 'Downloaded Physics Formulas PDF', time: 'Yesterday', icon: <Download size={16} className="text-amber-600" /> },
-              { text: 'Joined UCE Revision Team', time: '2 days ago', icon: <Users size={16} className="text-cyan-600" /> },
-              { text: 'Completed English Comprehension', time: '3 days ago', icon: <CheckCircle2 size={16} className="text-emerald-600" /> },
+              { text: 'Submitted Cell Division Essay', time: '2 hrs ago', icon: <CheckCircle2 size={18} className="text-emerald-600" /> },
+              { text: 'Scored 13/15 on Chemistry Quiz', time: 'Yesterday', icon: <CheckCircle2 size={18} className="text-brand" /> },
+              { text: 'Downloaded Physics Formulas PDF', time: 'Yesterday', icon: <Download size={18} className="text-amber-600" /> },
             ].map((item, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50">{item.icon}</div>
+              <div key={i} className="flex items-start gap-3 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+                <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-3xl bg-white text-slate-700">{item.icon}</div>
                 <div>
-                  <p className="text-sm font-medium text-slate-800">{item.text}</p>
-                  <p className="text-xs text-slate-400">{item.time}</p>
+                  <p className="text-sm font-semibold text-slate-950">{item.text}</p>
+                  <p className="mt-1 text-xs text-slate-500">{item.time}</p>
                 </div>
               </div>
             ))}
