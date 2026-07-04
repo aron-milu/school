@@ -169,8 +169,7 @@ export default function Login() {
                 </div>
               </div>
               <div className="mt-14 max-w-xl space-y-6">
-                <p className="text-sm uppercase tracking-[0.35em] text-white/70">Soma356 school management</p>
-                <h1 className="text-4xl font-extrabold leading-tight">One platform for attendance, classes, and parent communication.</h1>
+                <h1 className="text-4xl font-extrabold leading-tight">One open platform for schools and independent learners, featuring interactive classes, student communities, and parent communication.</h1>
                 <p className="text-base text-white/80">Empower teachers, support administrators, and keep guardians in sync with every step of the school day.</p>
               </div>
               <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
