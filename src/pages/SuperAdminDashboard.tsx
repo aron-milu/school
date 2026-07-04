@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import HeroBanner from '../components/HeroBanner';
 import { useAuth } from '../context/AuthContext';
 import {
   LogOut, Globe, AlertCircle, Plus, Search, X,
@@ -224,7 +223,6 @@ function OverviewTab({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          <HeroBanner title="Platform insights" subtitle="Overview of schools, students, and system health" actions={[{ label: 'Manage schools', onClick: () => setActiveTab('schools'), primary: true }]} stats={stats} />
           {/* System Status */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h3 className="text-lg font-bold text-brand mb-4">System Status</h3>

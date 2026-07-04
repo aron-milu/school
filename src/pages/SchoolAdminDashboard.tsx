@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import HeroBanner from '../components/HeroBanner';
 import { useAuth } from '../context/AuthContext';
 import {
   LogOut, BookOpen, Users, Plus, Search, X,
@@ -117,7 +118,12 @@ export default function SchoolAdminDashboard() {
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
-        {activeTab === 'overview' && <OverviewTab onNavigate={navigateToTab} onAdd={setShowAddModal} />}
+        {activeTab === 'overview' && (
+          <>
+            <HeroBanner title="School admin workspace" subtitle="Manage classes, students, and teachers efficiently" actions={[{ label: 'Add class', onClick: () => setShowAddModal('class'), primary: true }]} />
+            <OverviewTab onNavigate={navigateToTab} onAdd={setShowAddModal} />
+          </>
+        )}
         {activeTab === 'classes' && <ClassesTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} onAdd={() => setShowAddModal('class')} />}
         {activeTab === 'students' && <StudentsTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} onAdd={() => setShowAddModal('student')} />}
         {activeTab === 'teachers' && <TeachersTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} onAdd={() => setShowAddModal('teacher')} />}
