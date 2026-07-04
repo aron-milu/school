@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import type { Provider } from '@supabase/supabase-js';
-import { BookOpen, GraduationCap, Building2, Wrench, Shield, Eye, EyeOff } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
+import { GraduationCap, Building2, Wrench, Shield, Eye, EyeOff } from 'lucide-react';
 import type { UserRole } from '../types';
 
 const ROLE_ROUTES: Record<UserRole, string> = {
@@ -159,8 +160,8 @@ export default function Login() {
             <div className="absolute inset-0 bg-slate-950/80" />
             <div className="relative z-10 p-12">
               <div className="flex items-center gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white/15 shadow-lg backdrop-blur-sm">
-                  <BookOpen className="text-white" size={28} />
+                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white/15 shadow-lg backdrop-blur-sm overflow-hidden">
+                  <BrandLogo className="h-full w-full object-contain" />
                 </div>
                 <div>
                   <p className="text-sm uppercase tracking-[0.35em] text-white/70">SomaNow</p>

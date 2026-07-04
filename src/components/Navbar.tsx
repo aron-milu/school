@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import BrandLogo from './BrandLogo';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -13,8 +13,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow">
-                <BookOpen className="text-brand" size={20} />
+              <div className="w-10 h-10 overflow-hidden rounded-lg bg-white flex items-center justify-center shadow">
+                <BrandLogo className="h-full w-full object-contain" />
               </div>
               <span className="font-bold text-lg text-white">Soma365</span>
             </Link>

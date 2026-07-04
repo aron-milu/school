@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { AccountType, EducationLevel } from '../types';
+import BrandLogo from '../components/BrandLogo';
 import { BookOpen, GraduationCap, Building2 } from 'lucide-react';
 
 const ACCOUNT_TYPE_OPTIONS: { value: AccountType; label: string; icon: React.ReactNode }[] = [
@@ -112,8 +113,8 @@ export default function Signup() {
 
             <div className="relative z-10 p-12">
               <div className="flex items-center gap-3 mb-8">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 shadow-lg backdrop-blur-sm">
-                  <BookOpen className="text-white" size={24} />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 shadow-lg backdrop-blur-sm overflow-hidden">
+                  <BrandLogo className="h-full w-full object-contain" />
                 </div>
                 <span className="text-xl font-semibold tracking-tight">Soma365</span>
               </div>

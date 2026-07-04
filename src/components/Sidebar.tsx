@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { BookOpen, Home as HomeIcon, FileText, Users, Menu, LogOut, ChevronLeft, ChevronRight, Download, Target, Bot, Headphones, HandHelping, Sparkles, GraduationCap, PenTool, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import BrandLogo from './BrandLogo';
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -46,8 +47,8 @@ export default function Sidebar() {
       <div className="h-full flex flex-col py-5 px-3">
         <div className="flex items-center justify-between gap-3 px-1 pb-5 border-b border-slate-100">
           <div className="min-w-0 flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand rounded-lg flex items-center justify-center shadow-sm shadow-brand/20">
-              <BookOpen className="text-white" size={20} />
+            <div className="w-10 h-10 overflow-hidden rounded-lg bg-white flex items-center justify-center shadow-sm shadow-brand/20">
+              <BrandLogo className="h-full w-full object-contain" />
             </div>
             <div className={`min-w-0 transition-all duration-150 ${collapsed ? 'opacity-0 w-0' : 'opacity-100 w-full'}`}>
               <span className={`block truncate font-bold text-lg ${isAuthenticated ? 'text-slate-950' : 'text-white'}`}>Soma365</span>

@@ -8,6 +8,7 @@ import {
   PenTool,
   Volume2, Mic, Type, Hand
 } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getDashboardTab, getDashboardTabPath } from '../lib/dashboardRoutes';
 
@@ -442,7 +443,7 @@ This download is a demo file to show how the download feature works.`;
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center"><BookOpen className="text-white" size={20} /></div>
+            <div className="w-9 h-9 overflow-hidden rounded-lg bg-slate-100 flex items-center justify-center"><BrandLogo className="h-full w-full object-contain" /></div>
             <div><h1 className="font-bold text-brand text-sm">Soma365</h1><p className="text-[10px] text-slate-500">{({ primary: 'Primary School', secondary: 'Secondary School', university: 'University', tertiary: 'Tertiary College', vocational: 'Vocational Institute' } as Record<string, string>)[user?.education_level || 'secondary'] || 'Secondary School'} - Student</p></div>
           </div>
           <div className="flex items-center gap-3">
